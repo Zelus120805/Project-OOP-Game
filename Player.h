@@ -72,7 +72,6 @@ public:
     
         _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); // Set đúng frame nhân vật đứng
     }
-    
 
     void controlPlayer() {
         if (Keyboard::isKeyPressed(Keyboard::A)) {
