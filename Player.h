@@ -7,7 +7,7 @@
 #include "Map.h"
 
 using namespace sf;
-
+ 
 class Player {
 private:
     SoundBuffer buffer;
@@ -16,12 +16,16 @@ private:
     float dx, dy;
     FloatRect rect;
     bool onGround;
-    Sprite sprite;
     float currentFrame;
 
     bool isHit = false;
     int flashCount = 0;
     Clock hitClock;
+
+    Sprite _tile;
+    Texture _tileSet;
+
+    bool _checkRight;
 private:
     void initSound() {
         if (!buffer.loadFromFile("Jump.ogg")) {
@@ -32,7 +36,7 @@ private:
 public:
     FloatRect getRect() { return rect; }
 
-    Sprite& getSprite() { return sprite; }
+    Sprite& getSprite() { return _tile; }
 
     FloatRect getRect() const { return rect; }
 
@@ -45,33 +49,40 @@ public:
     Clock getHitClock() { return hitClock; };
 
     void setFlashCount(int value) { flashCount = value; }
+
+    bool getIsHit() const { return isHit; }
 public:
     Player() {
        initSound();
     } // constructor mặc định
 
-    Player(Texture& texture, float x, float y) {
-        sprite.setTexture(texture);
-        rect = FloatRect(x, y, 16, 16);
-        dx = dy = 0.1;
-        currentFrame = 0;
-        initSound();
-    }
-
-    void setPlayer(Texture& texture, float x, float y) {
-        sprite.setTexture(texture);
-        rect = FloatRect(x, y, 16, 16);
-        dx = dy = 0.1;
-        currentFrame = 0;
-    }
-
     ~Player() { }
 
+    void setPlayer(float x, float y) {
+        if (!_tileSet.loadFromFile("ContraSheet.png")) {
+            std::cerr << "Error loading ContraSheet.png\n";
+        }
+    
+        _tile.setTexture(_tileSet);
+    
+        rect = FloatRect(x, y, 25, 35);  // nhân vật 24x32
+        dx = dy = 0;                     // ban đầu đứng yên
+        currentFrame = 0;
+        _checkRight = true; // mặc định là đi phải
+    
+        _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); // Set đúng frame nhân vật đứng
+    }
+    
+
     void controlPlayer() {
-        if (Keyboard::isKeyPressed(Keyboard::A))
+        if (Keyboard::isKeyPressed(Keyboard::A)) {
             dx = -0.1;
-        if (Keyboard::isKeyPressed(Keyboard::D))
+            _checkRight = false;
+        }
+        if (Keyboard::isKeyPressed(Keyboard::D)) {
             dx = 0.1;
+            _checkRight = true;
+        }
         if (Keyboard::isKeyPressed(Keyboard::W)) {
             if (onGround) {
                 dy = -0.3;
@@ -84,27 +95,39 @@ public:
     void update(float time, const std::vector<std::string>& tileMap) {
         rect.left += dx * time;
         Collision(0, tileMap);
-
+    
         if (!onGround) dy += 0.0005f * time;
         rect.top += dy * time;
         onGround = false;
         Collision(1, tileMap);
-
+    
         currentFrame += time * 0.005f;
-        if (currentFrame > 3) currentFrame -= 3;
-
-        if (dx > 0) sprite.setTextureRect(IntRect(112 + 31 * int(currentFrame), 144, 16, 16));
-        if (dx < 0) sprite.setTextureRect(IntRect(112 + 31 * int(currentFrame) + 16, 144, -16, 16));
-
-        sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
-        dx = 0;
+        if (currentFrame > 5) currentFrame = 0; // 5 frames chạy
+    
+        // Animation
+        if (dx > 0) { // đi phải
+            _tile.setTextureRect(IntRect(144 - 2 + 24 * int(currentFrame), 136 - 4, 24, 32 + 4));
+        }
+        else if (dx < 0) { // đi trái
+            _tile.setTextureRect(IntRect(144 - 2 + 24 * int(currentFrame) + 24, 136 - 4, -24, 32 + 4));
+        }
+        else { // đứng yên
+            if (_checkRight) 
+                _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); 
+            else
+                _tile.setTextureRect(IntRect(144 + 24, 16, -24, 32 + 4));
+        }
+    
+        _tile.setPosition(rect.left - offsetX, rect.top - offsetY);
+    
+        dx = 0; // reset dx sau mỗi frame
 
         if (isHit) {
             if (hitClock.getElapsedTime().asMilliseconds() > 200) { // mỗi 100ms đổi màu
                 if (flashCount % 2 == 0)
-                    sprite.setColor(Color::Red);
+                    _tile.setColor(Color::Red);
                 else
-                    sprite.setColor(Color::White);
+                    _tile.setColor(Color::White);
         
                 flashCount++;
                 hitClock.restart();
@@ -112,11 +135,12 @@ public:
                 if (flashCount >= 6) { // 3 lần nhấp nháy
                     isHit = false;
                     flashCount = 0;
-                    sprite.setColor(Color::White);
+                    _tile.setColor(Color::White);
                 }
             }
         }
-    }
+    }    
+    
 
     void Collision(int num, const std::vector<std::string>& tileMap) {
         for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++)

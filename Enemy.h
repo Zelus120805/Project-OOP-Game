@@ -30,15 +30,16 @@ public:
     void setAlive(bool value) { life = value; }
 public:
     Enemy() { }
-    void set(Texture &image, int x, int y) {
+
+    ~Enemy() { }
+
+    void setEnemy(Texture &image, int x, int y) {
         sprite.setTexture(image);
         rect = FloatRect(x, y, 16, 16);
         dx = 0.05f;
         currentFrame = 0;
         life = true;
     }
-
-    ~Enemy() { }
     
     void update(float time, const std::vector<std::string>& tileMap) {
         rect.left += dx * time;
@@ -64,6 +65,6 @@ public:
                 }
             }
         }
-    };
+};
 
 #endif // ENRMY_H
