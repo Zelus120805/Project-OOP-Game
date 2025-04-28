@@ -28,6 +28,12 @@ public:
 
         _tile.setTexture(_tileSet);
 
+        try {
+            _map.loadMapFromFile("maps.txt"); // Đọc map từ file
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        }
+
         _player.setPlayer(120, 120);
 
         _enemy.setEnemy(_tileSet, 48 * 16, 13 * 16);
