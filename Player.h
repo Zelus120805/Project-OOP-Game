@@ -28,7 +28,7 @@ private:
     bool _checkRight;
 private:
     void initSound() {
-        if (!buffer.loadFromFile("Jump.ogg")) {
+        if (!buffer.loadFromFile("Sound/Jump.ogg")) {
             std::cerr << "Missing Jump.ogg\n";
         }
         sound.setBuffer(buffer);
@@ -59,7 +59,7 @@ public:
     ~Player() { }
 
     void setPlayer(float x, float y) {
-        if (!_tileSet.loadFromFile("ContraSheet.png")) {
+        if (!_tileSet.loadFromFile("Player/ContraSheet.png")) {
             std::cerr << "Error loading ContraSheet.png\n";
         }
     
@@ -72,7 +72,6 @@ public:
     
         _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); // Set đúng frame nhân vật đứng
     }
-    
 
     void controlPlayer() {
         if (Keyboard::isKeyPressed(Keyboard::A)) {

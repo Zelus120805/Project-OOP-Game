@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 inline float offsetX = 0;
 inline float offsetY = 0;
@@ -13,44 +15,7 @@ private:
     const int _width = 150;
     std::vector<std::vector<std::string>> maps;
 public:
-    Map() {
-       maps.push_back({
-            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "0                                                                                                                                                   0",
-            "0                                                                                    w                                                              0",
-            "0                   w                                  w                   w                                                                        0",
-            "0                                      w                                       kk                                                                   0",
-            "0                                                                             k  k    k    k                                                        0",
-            "0                      c                                                      k      kkk  kkk  w                                                    0",
-            "0                                                                       r     k       k    k                                                        0",
-            "0                                                                      rr     k  k                                                                  0",
-            "0                                                                     rrr      kk                                                                   0",
-            "0               c    kckck                                           rrrr                                                                           0",
-            "0                                      t0                           rrrrr                                                                           0",
-            "0G                                     00              t0          rrrrrr            G                                                              0",
-            "0           d    g       d             00              00         rrrrrrr                                                                           0",
-            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-            });
-        
-        // maps.push_back({
-        //     "000000000000000000000000000000",
-        //     "0                            0",
-        //     "0         kkk                0",
-        //     "0    w                      G0",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        // });
-
-        // maps.push_back({
-        //     "000000000000000000000000000000",
-        //     "0       rrrrr               G0",
-        //     "0     c     c                0",
-        //     "0         tttt              0",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        // });
-        // Bạn có thể push_back thêm nhiều map khác
-    }
+    Map() { }
 
     ~Map() { }
 
@@ -83,6 +48,42 @@ public:
     //         }
     //     }
     // }
+
+
+    // Hàm đọc map từ file
+    void loadMapFromFile(const std::string& filePath) {
+        std::ifstream file(filePath);
+        if (!file.is_open()) {
+            throw std::runtime_error("Unable to open map file: " + filePath);
+        }
+    
+        std::vector<std::string> map;
+        std::string line;
+        while (std::getline(file, line)) {
+            if (line.empty()) {
+                if (!map.empty()) {
+                    maps.push_back(map);
+                    map.clear();
+                }
+            } else {
+                map.push_back(line);
+            }
+        }
+        if (!map.empty()) {
+            maps.push_back(map);
+        }
+    
+        // Kiểm tra độ dài mỗi dòng
+        for (int i = 0; i < maps.size(); ++i) {
+            for (int j = 0; j < maps[i].size(); ++j) {
+                if (maps[i][j].size() != 125) {
+                    std::cout << "Dong " << j << " bi loi do dai: " << maps[i][j].size() << "\n";
+                }
+            }
+        }
+    
+        file.close();
+    }  
 };
 
 #endif

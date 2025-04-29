@@ -22,17 +22,23 @@ private:
     Clock _clock;
 public:
     App() : _window(VideoMode(400, 250), "Game"), _player() {
-        if (!_tileSet.loadFromFile("Mario_Tileset.png")) {
+        if (!_tileSet.loadFromFile("Player/Mario_Tileset.png")) {
             std::cerr << "Error loading Mario_Tileset.png\n";
         }
 
         _tile.setTexture(_tileSet);
 
+        try {
+            _map.loadMapFromFile("Level/Level_1.txt"); // Đọc map từ file
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        }
+
         _player.setPlayer(120, 120);
 
         _enemy.setEnemy(_tileSet, 48 * 16, 13 * 16);
 
-        if (!_music.openFromFile("Mario_Theme.ogg"))
+        if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
             std::cerr << "Missing Mario_Theme.ogg\n";
         _music.setLoop(true);
         _music.play();
