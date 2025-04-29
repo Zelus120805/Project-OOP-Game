@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 inline float offsetX = 0;
 inline float offsetY = 0;
@@ -14,57 +15,7 @@ private:
     const int _width = 150;
     std::vector<std::vector<std::string>> maps;
 public:
-    Map() {
-        // maps.push_back({
-        //     "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        //     "0                                                                                                                                                   0",
-        //     "0                                                                                    w                                                              0",
-        //     "0                   w                                  w                   w                                                                        0",
-        //     "0                                      w                                       kk                                                                   0",
-        //     "0                                                                             k  k    k    k                                                        0",
-        //     "0                      c                                                      k      kkk  kkk  w                                                    0",
-        //     "0                                                                       r     k       k    k                                                        0",
-        //     "0                                                                      rr     k  k                                                                  0",
-        //     "0                                                                     rrr      kk                                                                   0",
-        //     "0               c    kckck                                           rrrr                                                                           0",
-        //     "0                                      t0                           rrrrr                                                                           0",
-        //     "0G                                     00              t0          rrrrrr            G                                                              0",
-        //     "0           d    g       d             00              00         rrrrrrr                                                                           0",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        // });
-        
-        // Sau khi đã có kỹ năng phá tường mới đi map này được
-        // maps.push_back({
-        //     "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        //     "0                                                                                                                                                   0",
-        //     "0                                                      w          w                w                                                               0",
-        //     "0               rrr            kkk            ccc          w                   rrr                                                                 0",
-        //     "0      w          r      w                                  kk            w         r                                                              0",
-        //     "0                k k                   t0      k k k     c   c                 k k                                                                 0",
-        //     "0      c   w      k                     00       k  k   k     k       c     t0   k   w                                                             0",
-        //     "0         k k     k             r       00       kk k     w w w       k k   00   k k                                                                0",
-        //     "0         kkk     k    rrr              00   w         rrr          kk k   00    kk                                                                0",
-        //     "0c c c    k       k            G                  rrrr       rrr           00      G                                                              0",
-        //     "0       t0      kkkk      c        ccc      t0       ccc      ccc         t0                                                                       0",
-        //     "0       00        rrrr              00       00                                                                                                    0",
-        //     "0       00      rr          G        00       00               G                                                                                   0",
-        //     "0g  d    00  rr      d      g        00       00      g     d         g                                                                              0",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        // });        
-
-        // maps.push_back({
-        //     "000000000000000000000000000000",
-        //     "0       rrrrr               G0",
-        //     "0     c     c                0",
-        //     "0         tttt              0",
-        //     "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
-        // });
-        // Bạn có thể push_back thêm nhiều map khác
-    }
+    Map() { }
 
     ~Map() { }
 
@@ -97,6 +48,8 @@ public:
     //         }
     //     }
     // }
+
+
     // Hàm đọc map từ file
     void loadMapFromFile(const std::string& filePath) {
         std::ifstream file(filePath);
