@@ -21,7 +21,7 @@ public:
             maps.clear();
         }
         try {
-            this->loadMapFromFile("maps.txt"); // Đọc map từ file
+            this->loadMapFromFile("Level/Level_1.txt"); // Đọc map từ file
         } catch (const std::exception& e) {
             std::cerr << e.what() << std::endl;
         }
@@ -29,47 +29,38 @@ public:
 
     ~Map() { }
 
-    int getHeight() {return _height;}
+    int getHeight() { return _height; }
 
-    int getWidth() {return _width;}
+    int getWidth() { return _width; }
 
     const std::vector<std::string>& getMap(int level) const {
         return maps[level];
     }
 public:
-    void loadMapFromFile(const std::string& filePath) {
-        std::ifstream file(filePath);
-        if (!file.is_open()) {
-            throw std::runtime_error("Unable to open map file: " + filePath);
-        }
-    
-        std::vector<std::string> map;
-        std::string line;
-        while (std::getline(file, line)) {
-            if (line.empty()) {
-                if (!map.empty()) {
-                    maps.push_back(map);
-                    map.clear();
-                }
-            } else {
-                map.push_back(line);
-            }
-        }
-        if (!map.empty()) {
-            maps.push_back(map);
-        }
-    
-        // Kiểm tra độ dài mỗi dòng
-        for (int i = 0; i < maps.size(); ++i) {
-            for (int j = 0; j < maps[i].size(); ++j) {
-                if (maps[i][j].size() > 150) {
-                    std::cout << "Dong " << j << " bi loi do dai: " << maps[i][j].size() << "\n";
-                }
-            }
-        }
-    
-        file.close();
+void loadMapFromFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Unable to open map file: " + filePath);
     }
+
+    std::vector<std::string> map;
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            if (!map.empty()) {
+                maps.push_back(map);
+                map.clear();
+            }
+        } else {
+            map.push_back(line);
+        }
+    }
+    if (!map.empty()) {
+        maps.push_back(map);
+    }
+
+    file.close();
+}
 
     void render(RenderWindow& window, const Texture& tileSet) {
         Sprite tile;
@@ -96,7 +87,6 @@ public:
             }
         }
     }
-    
 };
 
-#endif
+#endif // _MAP_H_

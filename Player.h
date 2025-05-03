@@ -4,7 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <vector>
 #include "Map.h"
+#include "Bullet.h"
 
 using namespace sf;
  
@@ -22,23 +24,54 @@ private:
     int flashCount = 0;
     Clock hitClock;
 
-    Sprite _tile;
-    Texture _tileSet;
+    Texture _text;
+    Sprite _playerSet;
+
+    Bullet _bullet;
 
     bool _checkRight;
+
+    // Bullet
+    Sprite _bulletSet;
+    std::vector<Bullet> _bullets; // Nhiều viên đạn
+    sf::Clock _shootCooldown;     // Giới hạn tốc độ bắn
 private:
     void initSound() {
-        if (!buffer.loadFromFile("Jump.ogg")) {
+        if (!buffer.loadFromFile("Sound/Jump.ogg")) {
             std::cerr << "Missing Jump.ogg\n";
         }
         sound.setBuffer(buffer);
     }
+
+    void isAttacked() {
+        if (isHit) {
+            if (hitClock.getElapsedTime().asMilliseconds() > 200) { // mỗi 100ms đổi màu
+                if (flashCount % 2 == 0)
+                    _playerSet.setColor(Color::Red);
+                else
+                _playerSet.setColor(Color::White);
+        
+                flashCount++;
+                hitClock.restart();
+        
+                if (flashCount >= 6) { // 3 lần nhấp nháy
+                    isHit = false;
+                    flashCount = 0;
+                    _playerSet.setColor(Color::White);
+                }
+            }
+        }
+    }
 public:
     FloatRect getRect() { return rect; }
 
-    Sprite& getSprite() { return _tile; }
+    Sprite& getPlayerSprite() { return _playerSet; }
 
     FloatRect getRect() const { return rect; }
+
+    Bullet& getBullet() { return _bullet; }
+
+    Sprite& getBulletSprite() { return _bulletSet; }
 
     float getDY() const { return dy; }
 
@@ -51,6 +84,9 @@ public:
     void setFlashCount(int value) { flashCount = value; }
 
     bool getIsHit() const { return isHit; }
+
+    // Bullet
+    const std::vector<Bullet>& getBullets() const { return _bullets; }
 public:
     Player() {
        initSound();
@@ -59,96 +95,128 @@ public:
     ~Player() { }
 
     void setPlayer(float x, float y) {
-        if (!_tileSet.loadFromFile("ContraSheet.png")) {
-            std::cerr << "Error loading ContraSheet.png\n";
+        if (!_text.loadFromFile("Player/Contra.png")) {
+            std::cerr << "Error loading Contra.png\n";
         }
     
-        _tile.setTexture(_tileSet);
+        _playerSet.setTexture(_text);
+        _bulletSet.setTexture(_text);
     
         rect = FloatRect(x, y, 25, 35);  // nhân vật 24x32
         dx = dy = 0;                     // ban đầu đứng yên
         currentFrame = 0;
         _checkRight = true; // mặc định là đi phải
     
-        _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); // Set đúng frame nhân vật đứng
+        _playerSet.setTextureRect(IntRect(24 * 8, 8 - 5, 30, 32 + 4)); // Set đúng frame nhân vật đứng
+        _bulletSet.setTextureRect(IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6)); // Set đúng frame viên đạn
+    }
+public:
+    // Bullet
+    void shoot() {
+        if (_shootCooldown.getElapsedTime().asMilliseconds() >= 500) {
+            Bullet bullet;
+            if (_checkRight) {
+                bullet.Shoot(rect.left + rect.width / 2 + 12, rect.top + rect.height / 2 - 6, _checkRight);
+            } else {
+                bullet.Shoot(rect.left - 2, rect.top + rect.height / 2 - 6, _checkRight);
+            }
+            _bullets.push_back(bullet);
+            _shootCooldown.restart();
+        }
     }
 
-    void controlPlayer() {
-        if (Keyboard::isKeyPressed(Keyboard::A)) {
-            dx = -0.1;
+    void updateBullets(float time, const std::vector<std::string>& tileMap) {
+        for (auto& b : _bullets)
+            b.update(time, tileMap);
+        
+        // Xoá đạn đã tắt
+        _bullets.erase(
+            std::remove_if(_bullets.begin(), _bullets.end(),
+                        [](const Bullet& b) { return !b.isActive(); }),
+            _bullets.end());
+    }
+public:
+    void controlPlayer(Keyboard::Key left, Keyboard::Key right, Keyboard::Key up, Keyboard::Key fire) {
+        if (Keyboard::isKeyPressed(left)) {
+            dx = -0.05;
             _checkRight = false;
         }
-        if (Keyboard::isKeyPressed(Keyboard::D)) {
-            dx = 0.1;
+        if (Keyboard::isKeyPressed(right)) {
+            dx = 0.05;
             _checkRight = true;
         }
-        if (Keyboard::isKeyPressed(Keyboard::W)) {
+        if (Keyboard::isKeyPressed(up)) {
             if (onGround) {
                 dy = -0.3;
                 onGround = false;
                 sound.play();
             }
         }
+        if (Keyboard::isKeyPressed(fire)) {
+            shoot(); // Bắn đạn
+        }
     }
 
-    void update(float time, const std::vector<std::string>& tileMap) {
+    void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) {
         rect.left += dx * time;
-        Collision(0, tileMap);
+        Collision(false, tileMap);
     
-        if (!onGround) dy += 0.0005f * time;
+        if (!onGround) 
+            dy += 0.0005f * time;
         rect.top += dy * time;
         onGround = false;
-        Collision(1, tileMap);
+        Collision(true, tileMap);
     
         currentFrame += time * 0.005f;
-        if (currentFrame > 5) currentFrame = 0; // 5 frames chạy
+        if (currentFrame > 5)
+            currentFrame = 0; // 5 frames chạy
     
         // Animation
         if (dx > 0) { // đi phải
-            _tile.setTextureRect(IntRect(144 - 2 + 24 * int(currentFrame), 136 - 4, 24, 32 + 4));
+            _playerSet.setTextureRect(IntRect(19 * 8 - 40 * int(currentFrame), 8 - 5, 30, 32 + 4));
         }
         else if (dx < 0) { // đi trái
-            _tile.setTextureRect(IntRect(144 - 2 + 24 * int(currentFrame) + 24, 136 - 4, -24, 32 + 4));
+            _playerSet.setTextureRect(IntRect(19 * 8 - 40 * int(currentFrame) + 30, 8 - 5, -30, 32 + 4));
         }
         else { // đứng yên
             if (_checkRight) 
-                _tile.setTextureRect(IntRect(144, 16, 24, 32 + 4)); 
+            _playerSet.setTextureRect(IntRect(24 * 8, 8 - 5, 30, 32 + 4));
             else
-                _tile.setTextureRect(IntRect(144 + 24, 16, -24, 32 + 4));
+            _playerSet.setTextureRect(IntRect(24 * 8 + 30, 8 - 5, -30, 32 + 4));
         }
     
-        _tile.setPosition(rect.left - offsetX, rect.top - offsetY);
+        _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY);
     
         dx = 0; // reset dx sau mỗi frame
 
-        if (isHit) {
-            if (hitClock.getElapsedTime().asMilliseconds() > 200) { // mỗi 100ms đổi màu
-                if (flashCount % 2 == 0)
-                    _tile.setColor(Color::Red);
-                else
-                    _tile.setColor(Color::White);
-        
-                flashCount++;
-                hitClock.restart();
-        
-                if (flashCount >= 6) { // 3 lần nhấp nháy
-                    isHit = false;
-                    flashCount = 0;
-                    _tile.setColor(Color::White);
-                }
-            }
-        }
+        isAttacked(); // kiểm tra va chạm với enemy
     }    
     
-
-    void Collision(int num, const std::vector<std::string>& tileMap) {
+    void Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
         for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++)
             for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-                if (tileMap[i][j] == 'P' || tileMap[i][j] == 'k' || tileMap[i][j] == '0' || tileMap[i][j] == 'r' || tileMap[i][j] == 't') {
-                    if (dy > 0 && num == 1) { rect.top = i * 16 - rect.height; dy = 0; onGround = true; }
-                    if (dy < 0 && num == 1) { rect.top = i * 16 + 16; dy = 0; }
-                    if (dx > 0 && num == 0) { rect.left = j * 16 - rect.width; }
-                    if (dx < 0 && num == 0) { rect.left = j * 16 + 16; }
+                if (   tileMap[i][j] == 'P' 
+                    || tileMap[i][j] == 'k' 
+                    || tileMap[i][j] == '0' 
+                    || tileMap[i][j] == 'r' 
+                    || tileMap[i][j] == 't') 
+                {
+                    if (dy > 0 && checkVertical) { 
+                        rect.top = i * 16 - rect.height; 
+                        dy = 0; 
+                        onGround = true; 
+                    }
+
+                    if (dy < 0 && checkVertical) { 
+                        rect.top = i * 16 + 16; 
+                        dy = 0; 
+                    }
+
+                    if (dx > 0 && !checkVertical)
+                        rect.left = j * 16 - rect.width;
+
+                    if (dx < 0 && !checkVertical) 
+                        rect.left = j * 16 + 16;
                 }
             }
     }

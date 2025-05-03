@@ -21,15 +21,22 @@ private:
     Clock _clock;
 public:
     App() : _window(VideoMode(450, 300), "Game"), _player() {
-        if (!_tileSet.loadFromFile("Mario_Tileset.png")) {
+        if (!_tileSet.loadFromFile("Player/Mario_tileset.png")) {
             std::cerr << "Error loading Mario_Tileset.png\n";
         }
 
         _player.setPlayer(120, 120);
 
-        _enemy.setEnemy(_tileSet, 48 * 16, 13 * 16);
+        auto& currentMap = _map.getMap(0);
+        for (int i = 0; i < currentMap.size(); ++i) {
+            for (int j = 0; j < currentMap[i].size(); ++j) {
+                if (currentMap[i][j] == 't') { // Tại kí tự 't' là enemy
+                    _enemy.setEnemy(_tileSet, j * 16, i * 16); // Đặt enemy tại vị trí tương ứng
+                }
+            }
+        }
 
-        if (!_music.openFromFile("Mario_Theme.ogg"))
+        if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
             std::cerr << "Missing Mario_Theme.ogg\n";
         _music.setLoop(true);
         _music.play();
@@ -49,10 +56,6 @@ public:
                 if (event.type == Event::Closed)
                     _window.close();
             }
-
-            _player.controlPlayer();
-            _player.update(time, currentMap);
-            _enemy.update(time, currentMap);
 
             if (_player.getRect().left > 200)
                 offsetX = _player.getRect().left - 200;
@@ -81,7 +84,20 @@ public:
                 }
             }
 
-            _window.draw(_player.getSprite());
+            _player.controlPlayer(Keyboard::A, Keyboard::D, Keyboard::K, Keyboard::J);
+
+            _player.update(time, currentMap, _window);
+            _player.updateBullets(time, currentMap); // cập nhật tất cả đạn
+            //_player.getBullet().update(time); // cập nhật đạn
+            _enemy.update(time, currentMap);
+
+            _window.draw(_player.getPlayerSprite());
+            for (const Bullet& b : _player.getBullets()) {
+                if (b.isActive()) {
+                    _player.getBulletSprite().setPosition(b.getPosition().x, b.getPosition().y);
+                    _window.draw(_player.getBulletSprite());
+                }
+            }
             _window.draw(_enemy.getSprite());
             _window.display();
         }

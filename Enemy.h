@@ -31,7 +31,7 @@ public:
 public:
     Enemy() { }
 
-    ~Enemy() { }
+    virtual ~Enemy() { }
 
     void setEnemy(Texture &image, int x, int y) {
         sprite.setTexture(image);
