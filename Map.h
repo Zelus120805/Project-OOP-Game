@@ -19,9 +19,9 @@ public:
 
     ~Map() { }
 
-    int getHeight() {return _height;}
+    int getHeight() { return _height; }
 
-    int getWidth() {return _width;}
+    int getWidth() { return _width; }
 
     const std::vector<std::string>& getMap(int level) const {
         return maps[level];
@@ -86,4 +86,4 @@ public:
     }  
 };
 
-#endif
+#endif // _MAP_H_

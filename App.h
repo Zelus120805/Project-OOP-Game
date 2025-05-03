@@ -28,12 +28,6 @@ public:
 
         _tile.setTexture(_tileSet);
 
-        try {
-            _map.loadMapFromFile("Level/Level_1.txt"); // Đọc map từ file
-        } catch (const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
-
         _player.setPlayer(120, 120);
 
         _enemy.setEnemy(_tileSet, 48 * 16, 13 * 16);
@@ -47,6 +41,12 @@ public:
     virtual ~App() { }
     
     void run() {
+        try {
+            _map.loadMapFromFile("Level/Level_1.txt"); // Đọc map từ file
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        }
+        
         auto& currentMap = _map.getMap(0);
 
         while (_window.isOpen()) {
@@ -58,10 +58,6 @@ public:
                 if (event.type == Event::Closed)
                     _window.close();
             }
-
-            _player.controlPlayer();
-            _player.update(time, currentMap);
-            _enemy.update(time, currentMap);
 
             if (_player.getRect().left > 200)
                 offsetX = _player.getRect().left - 200;
@@ -107,7 +103,20 @@ public:
                 }
             }
 
-            _window.draw(_player.getSprite());
+            _player.controlPlayer(Keyboard::A, Keyboard::D, Keyboard::K, Keyboard::J);
+
+            _player.update(time, currentMap, _window);
+            _player.updateBullets(time, currentMap); // cập nhật tất cả đạn
+            //_player.getBullet().update(time); // cập nhật đạn
+            _enemy.update(time, currentMap);
+
+            _window.draw(_player.getPlayerSprite());
+            for (const Bullet& b : _player.getBullets()) {
+                if (b.isActive()) {
+                    _player.getBulletSprite().setPosition(b.getPosition().x, b.getPosition().y);
+                    _window.draw(_player.getBulletSprite());
+                }
+            }
             _window.draw(_enemy.getSprite());
             _window.display();
         }
