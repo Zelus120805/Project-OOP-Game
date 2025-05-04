@@ -1,118 +1,35 @@
 #ifndef _APP_H_
 #define _APP_H_
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
 #include "Player.h"
 #include "Enemy.h"
 #include "Map.h"
-using namespace sf;
 
 class App {
 private:
-    RenderWindow _window;
-    Texture _tileSet;
-    Sprite _tile;
+    sf::RenderWindow _window;
+    sf::Texture _tileSet;
 
     Map _map;
-    Player _player; // dùng constructor rỗng tạm
+    Player _player;
     Enemy _enemy;
 
-    Music _music;
-    Clock _clock;
+    sf::Music _music;
+    sf::Clock _clock;
+
+    void init();
+    void handleEvents();
+    void update(float time);
+    void render();
+
 public:
-    App() : _window(VideoMode(400, 250), "Game"), _player() {
-        if (!_tileSet.loadFromFile("Player/Mario_Tileset.png")) {
-            std::cerr << "Error loading Mario_Tileset.png\n";
-        }
+    App();
+    virtual ~App();
 
-        _tile.setTexture(_tileSet);
-
-        try {
-            _map.loadMapFromFile("Level/Level_1.txt"); // Đọc map từ file
-        } catch (const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
-
-        _player.setPlayer(120, 120);
-
-        _enemy.setEnemy(_tileSet, 48 * 16, 13 * 16);
-
-        if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
-            std::cerr << "Missing Mario_Theme.ogg\n";
-        _music.setLoop(true);
-        _music.play();
-    }
-    
-    virtual ~App() { }
-    
-    void run() {
-        auto& currentMap = _map.getMap(0);
-
-        while (_window.isOpen()) {
-            float time = _clock.restart().asMicroseconds() / 500.f;
-            if (time > 20) time = 20;
-
-            Event event;
-            while (_window.pollEvent(event)) {
-                if (event.type == Event::Closed)
-                    _window.close();
-            }
-
-            _player.controlPlayer();
-            _player.update(time, currentMap);
-            _enemy.update(time, currentMap);
-
-            if (_player.getRect().left > 200)
-                offsetX = _player.getRect().left - 200;
-
-            _window.clear(Color(107, 140, 255));
-            //_window.clear(Color::Blue);
-
-            for (int i = 0; i < _map.getHeight(); i++) {
-                for (int j = 0; j < _map.getWidth(); j++) {
-                    char tileChar = currentMap[i][j];
-                    if (tileChar == ' ' || tileChar == '0') continue;
-
-                    if (tileChar == 'P') _tile.setTextureRect(IntRect(143 - 16 * 3, 112, 16, 16));
-                    else if (tileChar == 'k') _tile.setTextureRect(IntRect(143, 112, 16, 16));
-                    else if (tileChar == 'c') _tile.setTextureRect(IntRect(143 - 16, 112, 16, 16));
-                    else if (tileChar == 't') _tile.setTextureRect(IntRect(0, 47, 32, 48));
-                    else if (tileChar == 'g') _tile.setTextureRect(IntRect(0, 139, 48, 37));
-                    else if (tileChar == 'G') _tile.setTextureRect(IntRect(145, 222, 77, 33));
-                    else if (tileChar == 'd') _tile.setTextureRect(IntRect(0, 106, 74, 21));
-                    else if (tileChar == 'w') _tile.setTextureRect(IntRect(99, 224, 41, 31));
-                    else if (tileChar == 'r') _tile.setTextureRect(IntRect(143 - 32, 112, 16, 16));
-
-                    _tile.setPosition(j * 16 - offsetX, i * 16 - offsetY);
-                    _window.draw(_tile);
-                }
-            }
-
-            // Va chạm Player với enemy
-            if (_player.getRect().intersects(_enemy.getRect())) {
-                if (_enemy.isAlive()) {
-                    if (_player.getDY() > 0) {
-                        _enemy.setDX(0);
-                        _player.setDY(-0.2f);
-                        _enemy.setAlive(false);
-                    } 
-                    else {
-                        if (!_player.getIsHit()) { // chỉ set nếu chưa bị hit
-                            _player.setIsHit(true);
-                            _player.getHitClock().restart();
-                            _player.setFlashCount(0);
-                        }
-                    }
-                }
-            }
-
-            _window.draw(_player.getSprite());
-            _window.draw(_enemy.getSprite());
-            _window.display();
-        }
-    }
+    void run();
 };
-    
 
-#endif
+#endif // _APP_H_
