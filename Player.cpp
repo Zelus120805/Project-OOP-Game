@@ -1,4 +1,3 @@
-
 #include "Player.h"
 #include <iostream>
 #include "Map.h"
@@ -33,10 +32,12 @@ void Player::isAttacked() {
 
 // --- Constructor / Destructor ---
 Player::Player() {
+    _hp = 100;
+    onGround = false;
     initSound();
 }
 
-Player::~Player() {}
+Player::~Player() { }
 
 // --- Getters / Setters ---
 sf::FloatRect Player::getRect() const { return rect; }
@@ -49,7 +50,7 @@ void Player::setIsHit(bool value) { isHit = value; }
 sf::Clock Player::getHitClock() { return hitClock; }
 void Player::setFlashCount(int value) { flashCount = value; }
 bool Player::getIsHit() const { return isHit; }
-const std::vector<Bullet>& Player::getBullets() const { return _bullets; }
+std::vector<Bullet>& Player::getBullets() { return _bullets; }
 
 // --- Setup ---
 void Player::setPlayer(float x, float y) {
@@ -149,7 +150,7 @@ void Player::update(float time, const std::vector<std::string>& tileMap, sf::Ren
 
 // --- Collision ---
 void Player::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
-    for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++)
+    for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
         for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
             if (tileMap[i][j] == 'P' || tileMap[i][j] == 'k' ||
                 tileMap[i][j] == '0' || tileMap[i][j] == 'r' ||
@@ -173,4 +174,5 @@ void Player::Collision(bool checkVertical, const std::vector<std::string>& tileM
                     rect.left = j * 16 + 16;
             }
         }
+    }
 }

@@ -24,7 +24,9 @@ private:
     void handleEvents();
     void update(float time);
     void render();
-
+private:
+    void playerCollisionWithEnemy();
+    void bulletCollisionWithEnemy();
 public:
     App();
     virtual ~App();

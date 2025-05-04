@@ -13,10 +13,16 @@ private:
     float _speed;
     bool _active;
 
+    float _damage;
+public:
+    sf::Sprite getSprite() const;
+    sf::Vector2f getPosition() const;
+    sf::FloatRect getRect() const;
+    float getDamage() const;
 public:
     Bullet();
     virtual ~Bullet();
-
+public:
     void Shoot(float x, float y, bool goingRight);
     void update(float time, const std::vector<std::string>& currentMap);
     void collision(const std::vector<std::string>& tileMap);
@@ -24,8 +30,7 @@ public:
     // Getters & utility
     bool isActive() const;
     void deactivate();
-    sf::Sprite getSprite() const;
-    sf::Vector2f getPosition() const;
+    void setActive(bool value);
 };
 
 #endif // _BULLET_H_
