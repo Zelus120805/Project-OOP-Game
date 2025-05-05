@@ -24,7 +24,6 @@ private:
     void handleEvents();
     void update(float time);
     void render();
-
 public:
     App();
     virtual ~App();
