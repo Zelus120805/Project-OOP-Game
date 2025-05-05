@@ -32,15 +32,15 @@ private:
     std::vector<Bullet> _bullets;
     sf::Clock _shootCooldown;
 
+    float _hp;
+private:
     void initSound();
     void isAttacked();
-
 public:
     Player();
     ~Player();
-
     void setPlayer(float x, float y);
-
+public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
     Bullet& getBullet();
@@ -51,11 +51,11 @@ public:
     sf::Clock getHitClock();
     void setFlashCount(int value);
     bool getIsHit() const;
-    const std::vector<Bullet>& getBullets() const;
-
+    std::vector<Bullet>& getBullets();
+public:
     void shoot();
     void updateBullets(float time, const std::vector<std::string>& tileMap);
-
+public:
     void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key fire);
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window);
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);

@@ -1,9 +1,9 @@
 #include "Bullet.h"
 #include "Map.h" // để dùng offsetX, offsetY
 
-Bullet::Bullet() : _active(false) {}
+Bullet::Bullet() : _active(false), _damage(20) { }
 
-Bullet::~Bullet() {}
+Bullet::~Bullet() { }
 
 void Bullet::Shoot(float x, float y, bool goingRight) {
     _rect = sf::FloatRect(x, y, 6, 6);
@@ -41,3 +41,9 @@ sf::Sprite Bullet::getSprite() const { return _tile; }
 sf::Vector2f Bullet::getPosition() const {
     return sf::Vector2f(_tile.getPosition().x, _tile.getPosition().y);
 }
+
+sf::FloatRect Bullet::getRect() const { return _rect; }
+
+float Bullet::getDamage() const { return _damage; }
+
+void Bullet::setActive(bool value) { _active = value; }
