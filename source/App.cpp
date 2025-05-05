@@ -12,11 +12,12 @@ void App::init() {
 
     _player.setPlayer(120, 120);
 
-    auto& currentMap = _map.getMap(0);
-    for (int i = 0; i < currentMap.size(); ++i)
-        for (int j = 0; j < currentMap[i].size(); ++j)
-            if (currentMap[i][j] == 't')
-                _enemy.setEnemy(_tileSet, j * 16, i * 16);
+    // auto& currentMap = _map.getMap(0);
+    // for (int i = 0; i < currentMap.size(); ++i)
+    //     for (int j = 0; j < currentMap[i].size(); ++j)
+    //         if (currentMap[i][j] == 't')
+    //             _enemy.setEnemy(_tileSet, j * 16, i * 16 - 16);
+    _enemy.setEnemy(_tileSet, 800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";
@@ -39,19 +40,8 @@ void App::update(float time) {
     if (_player.getRect().left > 200)
         offsetX = _player.getRect().left - 200;
 
-    if (_player.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
-        if (_player.getDY() > 0) {
-            _enemy.setDX(0);
-            _player.setDY(-0.2f);
-            _enemy.setAlive(false);
-        } else {
-            if (!_player.getIsHit()) {
-                _player.setIsHit(true);
-                _player.getHitClock().restart();
-                _player.setFlashCount(0);
-            }
-        }
-    }
+    playerCollisionWithEnemy();
+    bulletCollisionWithEnemy();
 
     _player.controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::K, sf::Keyboard::J);
     _player.update(time, currentMap, _window);
@@ -76,10 +66,39 @@ void App::render() {
     _window.display();
 }
 
+void App::playerCollisionWithEnemy() {
+    if (_player.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
+        if (_player.getDY() > 0) {
+            _enemy.setDX(0);
+            _player.setDY(-0.2f);
+            _enemy.setAlive(false);
+        } else {
+            if (!_player.getIsHit()) {
+                _player.setIsHit(true);
+                _player.getHitClock().restart();
+                _player.setFlashCount(0);
+            }
+        }
+    }
+}
+
+void App::bulletCollisionWithEnemy() {
+    for (Bullet& b : _player.getBullets()) {
+        if (!b.isActive()) continue;
+
+        if (b.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
+            b.setActive(false);        // Ẩn viên đạn
+            _enemy.takeDamage(b.getDamage());
+        }
+    }
+}
+
+
 void App::run() {
     while (_window.isOpen()) {
         float time = _clock.restart().asMicroseconds() / 500.f;
-        if (time > 20) time = 20;
+        if (time > 20) 
+            time = 20;
 
         handleEvents();
         update(time);
