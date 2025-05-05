@@ -1,3 +1,4 @@
+.PHONY: all test
 all:
 	g++ -o game \
 	    source/main.cpp source/App.cpp source/Player.cpp source/Enemy.cpp source/Map.cpp source/Bullet.cpp \
