@@ -9,7 +9,7 @@ Enemy::Enemy() {
     life = true;
     _hp = 100;
     _onGround = false;
- }
+}
 
 Enemy::~Enemy() { }
 

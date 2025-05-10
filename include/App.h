@@ -27,6 +27,7 @@ private:
 private:
     void playerCollisionWithEnemy();
     void bulletCollisionWithEnemy();
+    void drawHPBar(const Player& player, sf::Vector2f position);
 public:
     App();
     virtual ~App();

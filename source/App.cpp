@@ -54,6 +54,7 @@ void App::render() {
     _map.render(_window, _tileSet);
 
     _window.draw(_player.getPlayerSprite());
+    drawHPBar(_player, sf::Vector2f(20, 15));
 
     for (const Bullet& b : _player.getBullets()) {
         if (b.isActive()) {
@@ -93,6 +94,20 @@ void App::bulletCollisionWithEnemy() {
     }
 }
 
+void App::drawHPBar(const Player& player, sf::Vector2f position) {
+    float ratio = player.getHP() / player.getHPPlayer();
+
+    sf::RectangleShape bg(sf::Vector2f(100, 8));
+    bg.setFillColor(sf::Color(50, 50, 50));
+    bg.setPosition(position);
+
+    sf::RectangleShape bar(sf::Vector2f(100 * ratio, 8));
+    bar.setFillColor(sf::Color::Green);
+    bar.setPosition(position);
+
+    _window.draw(bg);
+    _window.draw(bar);
+}
 
 void App::run() {
     while (_window.isOpen()) {
