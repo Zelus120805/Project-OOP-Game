@@ -32,7 +32,9 @@ private:
     std::vector<Bullet> _bullets;
     sf::Clock _shootCooldown;
 
+    float _hpPlayer;
     float _hp;
+    bool _isDamagedTaken;
 private:
     void initSound();
     void isAttacked();
@@ -52,6 +54,8 @@ public:
     void setFlashCount(int value);
     bool getIsHit() const;
     std::vector<Bullet>& getBullets();
+    float getHP() const;
+    float getHPPlayer() const;
 public:
     void shoot();
     void updateBullets(float time, const std::vector<std::string>& tileMap);

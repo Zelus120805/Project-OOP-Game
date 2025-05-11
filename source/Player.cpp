@@ -12,6 +12,12 @@ void Player::initSound() {
 
 void Player::isAttacked() {
     if (isHit) {
+        if (!_isDamagedTaken) {
+            _isDamagedTaken = true;
+            _hp -= 10.f;
+            std::cout << "Player HP: " << _hp << std::endl;
+        }
+
         if (hitClock.getElapsedTime().asMilliseconds() > 200) {
             if (flashCount % 2 == 0)
                 _playerSet.setColor(sf::Color::Red);
@@ -22,6 +28,7 @@ void Player::isAttacked() {
             hitClock.restart();
 
             if (flashCount >= 6) {
+                _isDamagedTaken = false;
                 isHit = false;
                 flashCount = 0;
                 _playerSet.setColor(sf::Color::White);
@@ -32,7 +39,8 @@ void Player::isAttacked() {
 
 // --- Constructor / Destructor ---
 Player::Player() {
-    _hp = 100;
+    _hp = _hpPlayer = 100.f;
+    _isDamagedTaken = false;
     onGround = false;
     initSound();
 }
@@ -51,6 +59,8 @@ sf::Clock Player::getHitClock() { return hitClock; }
 void Player::setFlashCount(int value) { flashCount = value; }
 bool Player::getIsHit() const { return isHit; }
 std::vector<Bullet>& Player::getBullets() { return _bullets; }
+float Player::getHP() const { return _hp; }
+float Player::getHPPlayer() const { return _hpPlayer; }
 
 // --- Setup ---
 void Player::setPlayer(float x, float y) {
