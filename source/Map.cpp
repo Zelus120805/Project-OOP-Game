@@ -26,6 +26,16 @@ const std::vector<std::string>& Map::getMap(int level) const {
     return maps[level];
 }
 
+bool Map::loadBackground(const std::string& path) {
+    if (!_backgroundTexture.loadFromFile(path)) {
+        std::cerr << "Failed to load background: " << path << std::endl;
+        return false;
+    }
+    _backgroundSprite.setTexture(_backgroundTexture);
+    _backgroundSprite.setPosition(0, 0); // Vẽ từ góc trên bên trái
+    return true;
+}
+
 void Map::loadMapFromFile(const std::string& filePath) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -52,6 +62,8 @@ void Map::loadMapFromFile(const std::string& filePath) {
 }
 
 void Map::render(sf::RenderWindow& window, const sf::Texture& tileSet) {
+    window.draw(_backgroundSprite);         // Vẽ background
+
     sf::Sprite tile;
     tile.setTexture(tileSet);
     auto& currentMap = getMap(0);
@@ -60,16 +72,16 @@ void Map::render(sf::RenderWindow& window, const sf::Texture& tileSet) {
         for (int j = 0; j < _width; j++) {
             char tileChar = currentMap[i][j];
             if (tileChar == ' ' || tileChar == '0') continue;
-
-            if (tileChar == 'P') tile.setTextureRect(sf::IntRect(143 - 16 * 3, 112, 16, 16));
-            else if (tileChar == 'k') tile.setTextureRect(sf::IntRect(143, 112, 16, 16));
-            else if (tileChar == 'c') tile.setTextureRect(sf::IntRect(143 - 16, 112, 16, 16));
-            else if (tileChar == 't') tile.setTextureRect(sf::IntRect(0, 47, 32, 48));
-            else if (tileChar == 'g') tile.setTextureRect(sf::IntRect(0, 139, 48, 37));
-            else if (tileChar == 'G') tile.setTextureRect(sf::IntRect(145, 222, 77, 33));
-            else if (tileChar == 'd') tile.setTextureRect(sf::IntRect(0, 106, 74, 21));
-            else if (tileChar == 'w') tile.setTextureRect(sf::IntRect(99, 224, 41, 31));
-            else if (tileChar == 'r') tile.setTextureRect(sf::IntRect(143 - 32, 112, 16, 16));
+            
+            if (tileChar == '1') tile.setTextureRect(sf::IntRect(33, 32, 16, 16));          // nền đất 1
+            else if (tileChar == '2') tile.setTextureRect(sf::IntRect(49, 32, 16, 16));     // nền đất 2
+            else if (tileChar == '3') tile.setTextureRect(sf::IntRect(18, 16, 16, 16));     // nền đất cỏ 1
+            else if (tileChar == '4') tile.setTextureRect(sf::IntRect(49, 0, 16, 16));      // nền đất cỏ 2
+            else if (tileChar == '5') tile.setTextureRect(sf::IntRect(96, 48, 16, 16));     // block đá nhỏ
+            else if (tileChar == '6') tile.setTextureRect(sf::IntRect(112, 32, 32, 32));    // block đá lớn
+            else if (tileChar == '7') tile.setTextureRect(sf::IntRect(213, 48, 6, 48));     // thanh gỗ đứng
+            else if (tileChar == '8') tile.setTextureRect(sf::IntRect(224, 53, 48, 6));     // thanh gỗ ngang
+            else if (tileChar == '9') tile.setTextureRect(sf::IntRect(209, 33, 15, 15));    // cỏ hình cầu
             else continue;
 
             tile.setPosition(j * 16 - offsetX, i * 16 - offsetY);

@@ -6,17 +6,16 @@ App::App() : _window(sf::VideoMode(450, 300), "Game"), _player() {
 
 App::~App() {}
 
-void App::init() {
-    if (!_tileSet.loadFromFile("Player/Mario_tileset.png"))
-        std::cerr << "Error loading Mario_Tileset.png\n";
+void App::init() {   
+    if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
+        std::cerr << "Failed to load background\n";
+    }
+
+    if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
+        std::cerr << "Error loading Tiles.png\n";
 
     _player.setPlayer(120, 120);
 
-    // auto& currentMap = _map.getMap(0);
-    // for (int i = 0; i < currentMap.size(); ++i)
-    //     for (int j = 0; j < currentMap[i].size(); ++j)
-    //         if (currentMap[i][j] == 't')
-    //             _enemy.setEnemy(_tileSet, j * 16, i * 16 - 16);
     _enemy.setEnemy(_tileSet, 800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))

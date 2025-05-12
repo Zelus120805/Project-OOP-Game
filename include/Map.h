@@ -13,6 +13,8 @@ private:
     const int _height = 20;
     const int _width = 150;
     std::vector<std::vector<std::string>> maps;
+    sf::Texture _backgroundTexture;
+    sf::Sprite _backgroundSprite;
 public:
     Map();
     ~Map();
@@ -20,6 +22,7 @@ public:
     int getHeight();
     int getWidth();
     const std::vector<std::string>& getMap(int level) const;
+    bool loadBackground(const std::string& path);
 
     void loadMapFromFile(const std::string& filePath);
     void render(sf::RenderWindow& window, const sf::Texture& tileSet);

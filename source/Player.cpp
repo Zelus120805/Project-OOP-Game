@@ -162,9 +162,7 @@ void Player::update(float time, const std::vector<std::string>& tileMap, sf::Ren
 void Player::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
         for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-            if (tileMap[i][j] == 'P' || tileMap[i][j] == 'k' ||
-                tileMap[i][j] == '0' || tileMap[i][j] == 'r' ||
-                tileMap[i][j] == 't') {
+            if (tileMap[i][j] >= '1' && tileMap[i][j] <= '9') {
 
                 if (dy > 0 && checkVertical) {
                     rect.top = i * 16 - rect.height;
