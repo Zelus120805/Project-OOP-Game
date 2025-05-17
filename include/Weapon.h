@@ -1,12 +1,12 @@
-#ifndef _BULLET_H_
-#define _BULLET_H_
+#ifndef _WEAPON_H_
+#define _WEAPON_H_
 
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
 
-class Bullet {
-private:
+class Weapon {
+protected:
     sf::Texture _texture;
     sf::Sprite _tile;
     sf::FloatRect _rect;
@@ -20,10 +20,8 @@ public:
     sf::FloatRect getRect() const;
     float getDamage() const;
 public:
-    Bullet();
-    virtual ~Bullet();
+    virtual ~Weapon() = default;
 public:
-    void Shoot(float x, float y, bool goingRight);
     void update(float time, const std::vector<std::string>& currentMap);
     void collision(const std::vector<std::string>& tileMap);
 
@@ -33,4 +31,12 @@ public:
     void setActive(bool value);
 };
 
-#endif // _BULLET_H_
+class Gun : public Weapon {
+public:
+    Gun();
+    ~Gun() override { }
+
+    void Shoot(float x, float y, bool goingRight);
+};
+
+#endif // _WEAPON_H_

@@ -1,6 +1,6 @@
 #include "App.h"
 
-App::App() : _window(sf::VideoMode(450, 300), "Game"), _player() {
+App::App() : _window(sf::VideoMode(450, 300), "Game"), _contra() {
     init();
 }
 
@@ -10,7 +10,7 @@ void App::init() {
     if (!_tileSet.loadFromFile("Player/Mario_tileset.png"))
         std::cerr << "Error loading Mario_Tileset.png\n";
 
-    _player.setPlayer(120, 120);
+    _contra.setPlayer(120, 120);
 
     // auto& currentMap = _map.getMap(0);
     // for (int i = 0; i < currentMap.size(); ++i)
@@ -37,15 +37,15 @@ void App::handleEvents() {
 void App::update(float time) {
     auto& currentMap = _map.getMap(0);
 
-    if (_player.getRect().left > 200)
-        offsetX = _player.getRect().left - 200;
+    if (_contra.getRect().left > 200)
+        offsetX = _contra.getRect().left - 200;
 
     playerCollisionWithEnemy();
     bulletCollisionWithEnemy();
 
-    _player.controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::K, sf::Keyboard::J);
-    _player.update(time, currentMap, _window);
-    _player.updateBullets(time, currentMap);
+    _contra.controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
+    _contra.update(time, currentMap, _window);
+    _contra.updateBullets(time, currentMap);
     _enemy.update(time, currentMap);
 }
 
@@ -53,13 +53,13 @@ void App::render() {
     _window.clear(sf::Color(107, 140, 255));
     _map.render(_window, _tileSet);
 
-    _window.draw(_player.getPlayerSprite());
-    drawHPBar(_player, sf::Vector2f(20, 15));
+    _window.draw(_contra.getPlayerSprite());
+    drawHPBar(_contra, sf::Vector2f(20, 15));
 
-    for (const Bullet& b : _player.getBullets()) {
+    for (const Weapon& b : _contra.getBullets()) {
         if (b.isActive()) {
-            _player.getBulletSprite().setPosition(b.getPosition().x, b.getPosition().y);
-            _window.draw(_player.getBulletSprite());
+            _contra.getBulletSprite().setPosition(b.getPosition().x, b.getPosition().y);
+            _window.draw(_contra.getBulletSprite());
         }
     }
 
@@ -68,23 +68,23 @@ void App::render() {
 }
 
 void App::playerCollisionWithEnemy() {
-    if (_player.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
-        if (_player.getDY() > 0) {
+    if (_contra.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
+        if (_contra.getDY() > 0) {
             _enemy.setDX(0);
-            _player.setDY(-0.2f);
+            _contra.setDY(-0.2f);
             _enemy.setAlive(false);
         } else {
-            if (!_player.getIsHit()) {
-                _player.setIsHit(true);
-                _player.getHitClock().restart();
-                _player.setFlashCount(0);
+            if (!_contra.getIsHit()) {
+                _contra.setIsHit(true);
+                _contra.getHitClock().restart();
+                _contra.setFlashCount(0);
             }
         }
     }
 }
 
 void App::bulletCollisionWithEnemy() {
-    for (Bullet& b : _player.getBullets()) {
+    for (Weapon& b : _contra.getBullets()) {
         if (!b.isActive()) continue;
 
         if (b.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
