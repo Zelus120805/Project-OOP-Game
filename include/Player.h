@@ -5,10 +5,10 @@
 #include <SFML/Audio.hpp>
 #include <vector>
 #include "Map.h"
-#include "Bullet.h"
+#include "Weapon.h"
 
 class Player {
-private:
+protected:
     sf::SoundBuffer buffer;
     sf::Sound sound;
 
@@ -24,28 +24,31 @@ private:
     sf::Texture _text;
     sf::Sprite _playerSet;
 
-    Bullet _bullet;
+    Weapon* _weapon = nullptr;
 
+    // Direction
+    bool _checkLeft;
     bool _checkRight;
+    bool _checkUp;
+    bool _checkDown;
 
     sf::Sprite _bulletSet;
-    std::vector<Bullet> _bullets;
     sf::Clock _shootCooldown;
 
     float _hpPlayer;
     float _hp;
     bool _isDamagedTaken;
-private:
+protected:
     void initSound();
     void isAttacked();
 public:
-    Player();
-    ~Player();
-    void setPlayer(float x, float y);
+    virtual ~Player();
+    virtual void setPlayer(float x, float y) = 0;
+    virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
+    virtual void attack() = 0;
 public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
-    Bullet& getBullet();
     sf::Sprite& getBulletSprite();
     float getDY() const;
     void setDY(float value);
@@ -53,16 +56,29 @@ public:
     sf::Clock getHitClock();
     void setFlashCount(int value);
     bool getIsHit() const;
-    std::vector<Bullet>& getBullets();
     float getHP() const;
     float getHPPlayer() const;
 public:
-    void shoot();
-    void updateBullets(float time, const std::vector<std::string>& tileMap);
-public:
-    void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key fire);
-    void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window);
+    void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key fire);
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
+};
+
+class Contra : public Player {
+private:
+    std::vector<Gun> _bullets;
+public:
+    std::vector<Gun>& getBullets();
+    Weapon& getBullet();
+public:
+    Contra();
+    ~Contra() override;
+public:
+    void setPlayer(float x, float y) override;
+    void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
+public:
+    void setSpriteByPose(const std::string& pose, float currentFrame);
+    void attack() override;
+    void updateBullets(float time, const std::vector<std::string>& tileMap);
 };
 
 #endif // _PLAYER_H_

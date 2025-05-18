@@ -14,7 +14,7 @@ private:
     sf::Texture _tileSet;
 
     Map _map;
-    Player _player;
+    Contra _contra;
     Enemy _enemy;
 
     sf::Music _music;
