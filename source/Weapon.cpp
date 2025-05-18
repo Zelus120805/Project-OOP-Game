@@ -1,16 +1,6 @@
 #include "Weapon.h"
 #include "Map.h" // để dùng offsetX, offsetY
 
-void Weapon::update(float time, const std::vector<std::string>& currentMap) {
-    _rect.left += _speed * time;
-    _tile.setPosition(_rect.left - offsetX, _rect.top - offsetY);
-    collision(currentMap);
-
-    if (_tile.getPosition().x < 0 || _tile.getPosition().x > offsetX + 400.f) {
-        _active = false;
-    }
-}
-
 void Weapon::collision(const std::vector<std::string>& tileMap) {
     for (int i = _rect.top / 16; i < (_rect.top + _rect.height) / 16; ++i) {
         for (int j = _rect.left / 16; j < (_rect.left + _rect.width) / 16; ++j) {
@@ -42,10 +32,39 @@ void Weapon::setActive(bool value) { _active = value; }
 Gun::Gun() {
     _active = false;
     _damage = 10.f;
- }
+}
 
- void Gun::Shoot(float x, float y, bool goingRight) {
+void Gun::Shoot(float x, float y, BulletDirection dir) {
     _rect = sf::FloatRect(x, y, 6, 6);
-    _speed = goingRight ? 0.15f : -0.15f;
+    _direction = dir;
     _active = true;
+
+    switch (_direction) {
+        case BulletDirection::Right:
+            _speed = 0.15f;
+            break;
+        case BulletDirection::Left:
+            _speed = -0.15f;
+            break;
+        case BulletDirection::Up:
+            _speed = 0.f; // Xoay theo Y, không dùng _speed này
+            break;
+    }
+}
+
+void Gun::update(float time, const std::vector<std::string>& currentMap) {
+    if (_direction == BulletDirection::Up) {
+        _rect.top -= 0.2f * time; // bay lên
+    } else {
+        _rect.left += _speed * time; // bay ngang
+    }
+
+    _tile.setPosition(_rect.left - offsetX, _rect.top - offsetY);
+    collision(currentMap);
+
+    // loại bỏ nếu ra khỏi màn hình
+    if (_rect.left < 0 || _rect.left > offsetX + 800.f ||
+        _rect.top < 0 || _rect.top > offsetY + 800.f) {
+        _active = false;
+    }
 }

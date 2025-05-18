@@ -55,9 +55,9 @@ void App::render() {
     _window.draw(_contra.getPlayerSprite());
     drawHPBar(_contra, sf::Vector2f(20, 15));
 
-    for (const Weapon& b : _contra.getBullets()) {
-        if (b.isActive()) {
-            _contra.getBulletSprite().setPosition(b.getPosition().x, b.getPosition().y);
+    for (const auto& b : _contra.getBullets()) {
+        if (b->isActive()) {
+            _contra.getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
             _window.draw(_contra.getBulletSprite());
         }
     }
@@ -83,12 +83,12 @@ void App::playerCollisionWithEnemy() {
 }
 
 void App::bulletCollisionWithEnemy() {
-    for (Weapon& b : _contra.getBullets()) {
-        if (!b.isActive()) continue;
+    for (auto& b : _contra.getBullets()) {
+        if (!b->isActive()) continue;
 
-        if (b.getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
-            b.setActive(false);        // Ẩn viên đạn
-            _enemy.takeDamage(b.getDamage());
+        if (b->getRect().intersects(_enemy.getRect()) && _enemy.isAlive()) {
+            b->setActive(false);        // Ẩn viên đạn
+            _enemy.takeDamage(b->getDamage());
         }
     }
 }

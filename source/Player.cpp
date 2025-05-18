@@ -62,7 +62,7 @@ float Player::getHP() const { return _hp; }
 float Player::getHPPlayer() const { return _hpPlayer; }
 
 // --- Control / Update ---
-void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key fire) {
+void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key shoot) {
     if (sf::Keyboard::isKeyPressed(left)) {
         dx = -0.05;
         _checkLeft = true;
@@ -95,8 +95,8 @@ void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::
         _checkUp = false;
         _checkDown = false;
     }
-    if (sf::Keyboard::isKeyPressed(fire)) {
-        attack();
+    if (sf::Keyboard::isKeyPressed(shoot)) {
+        attack("gun");
     }
 }
 
@@ -143,7 +143,7 @@ Contra::~Contra() { }
 
 Weapon& Contra::getBullet() { return *_weapon; }
 
-std::vector<Gun>& Contra::getBullets() { return _bullets; }
+ std::vector<std::unique_ptr<Weapon>>& Contra::getBullets() { return _weapons; }
 
 void Contra::setPlayer(float x, float y) {
     if (!_text.loadFromFile("Player/Contra.png")) {
@@ -306,25 +306,40 @@ void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
 }
 
 void Contra::updateBullets(float time, const std::vector<std::string>& tileMap) {
-    for (auto& b : _bullets)
-        b.update(time, tileMap);
+    for (auto& weapon : _weapons)
+        weapon->update(time, tileMap);
 
-    _bullets.erase(
-        std::remove_if(_bullets.begin(), _bullets.end(),
-                       [](const Gun& b) { return !b.isActive(); }),
-        _bullets.end());
+    _weapons.erase(
+        std::remove_if(_weapons.begin(), _weapons.end(),
+                       [](const std::unique_ptr<Weapon>& b) { return !b->isActive(); }),
+        _weapons.end());
 }
 
-void Contra::attack() {
+void Contra::useGun() {
     if (_shootCooldown.getElapsedTime().asMilliseconds() >= 500) {
-        Gun bullet;
-        if (_checkRight) {
-            bullet.Shoot(rect.left + rect.width / 2 + 8, rect.top + rect.height / 2 - 6, _checkRight);
+        auto bullet = std::make_unique<Gun>();
+
+        if (_checkUp) {
+            bullet->Shoot(rect.left + rect.width / 2 - 3, rect.top, BulletDirection::Up);
+        } else if (_checkRight) {
+            bullet->Shoot(rect.left + rect.width / 2 + 8, rect.top + rect.height / 2 - 6, BulletDirection::Right);
         } else {
-            bullet.Shoot(rect.left - 1, rect.top + rect.height / 2 - 6, _checkRight);
+            bullet->Shoot(rect.left - 1, rect.top + rect.height / 2 - 6, BulletDirection::Left);
         }
-        _bullets.push_back(bullet);
+        _weapons.push_back(std::move(bullet));
         _shootCooldown.restart();
+    }
+}
+
+void Contra::useKnife() {
+    
+}
+
+void Contra::attack(const std::string& pose) {
+    if (pose == "knife") {
+        useKnife();
+    } else if (pose == "gun") {
+        useGun();
     }
 }
 
