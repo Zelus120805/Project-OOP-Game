@@ -15,7 +15,7 @@ void Weapon::collision(const std::vector<std::string>& tileMap) {
     for (int i = _rect.top / 16; i < (_rect.top + _rect.height) / 16; ++i) {
         for (int j = _rect.left / 16; j < (_rect.left + _rect.width) / 16; ++j) {
             char tile = tileMap[i][j];
-            if (tile == 'P' || tile == 'k' || tile == '0' || tile == 'r' || tile == 't') {
+            if (tile >= '0' && tile <= '9') {
                 _active = false;
             }
         }

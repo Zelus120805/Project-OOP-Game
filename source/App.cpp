@@ -16,7 +16,7 @@ void App::init() {
 
     _contra.setPlayer(120, 120);
 
-    _enemy.setEnemy(_tileSet, 800, 150);
+    //_enemy.setEnemy(_tileSet, 800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";
@@ -45,7 +45,7 @@ void App::update(float time) {
     _contra.controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
     _contra.update(time, currentMap, _window);
     _contra.updateBullets(time, currentMap);
-    _enemy.update(time, currentMap);
+    //_enemy.update(time, currentMap);
 }
 
 void App::render() {

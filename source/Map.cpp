@@ -23,6 +23,9 @@ int Map::getHeight() { return _height; }
 int Map::getWidth() { return _width; }
 
 const std::vector<std::string>& Map::getMap(int level) const {
+    if (level < 0 || level >= maps.size()) {
+        throw std::out_of_range("Map level out of range");
+    }
     return maps[level];
 }
 
@@ -63,6 +66,8 @@ void Map::loadMapFromFile(const std::string& filePath) {
 
 void Map::render(sf::RenderWindow& window, const sf::Texture& tileSet) {
     window.draw(_backgroundSprite);         // Vẽ background
+
+    if (maps.empty()) return;
 
     sf::Sprite tile;
     tile.setTexture(tileSet);

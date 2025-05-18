@@ -103,8 +103,10 @@ void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::
 // --- Collision ---
 void Player::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
+        if (i < 0 || i >= (int)tileMap.size()) continue; // Check chỉ số i hợp lệ
         for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-            if (tileMap[i][j] >= '1' && tileMap[i][j] <= '9') {
+            if (j < 0 || j >= (int)tileMap[i].size()) continue; // Check chỉ số j hợp lệ
+            if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
 
                 if (dy > 0 && checkVertical) {
                     rect.top = i * 16 - rect.height;

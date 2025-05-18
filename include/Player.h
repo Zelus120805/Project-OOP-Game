@@ -79,6 +79,12 @@ public:
     void setSpriteByPose(const std::string& pose, float currentFrame);
     void attack() override;
     void updateBullets(float time, const std::vector<std::string>& tileMap);
+public:
+    void testisAttacked() {
+        if (isHit) {
+            isAttacked();
+        }
+    }
 };
 
 #endif // _PLAYER_H_
