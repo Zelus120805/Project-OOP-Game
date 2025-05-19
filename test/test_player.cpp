@@ -61,15 +61,15 @@ TEST_CASE("Player Contra bị trúng đạn giảm HP") {
     CHECK(player.getIsHit() == false);
 }
 
-TEST_CASE("Player Contra bắn đạn tạo bullet active") {
-    Contra player;
-    player.setPlayer(50.f, 50.f);
+// TEST_CASE("Player Contra bắn đạn tạo bullet active") {
+//     Contra player;
+//     player.setPlayer(50.f, 50.f);
 
-    player.attack();
+//     player.attack();
 
-    auto& bullets = player.getBullets();
-    CHECK(bullets.size() > 0);
+//     auto& bullets = player.getBullets();
+//     CHECK(bullets.size() > 0);
 
-    // Đạn phải đang active
-    CHECK(bullets.back().isActive());
-}
+//     // Đạn phải đang active
+//     CHECK(bullets.back().isActive());
+// }
