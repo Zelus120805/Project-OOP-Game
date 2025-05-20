@@ -5,8 +5,11 @@
 #include <SFML/Audio.hpp>
 #include <memory>
 #include <vector>
+#include <map>
 #include "Map.h"
 #include "Weapon.h"
+
+class Weapon;
 
 class Player {
 protected:
@@ -34,11 +37,14 @@ protected:
     bool _checkDown;
 
     sf::Sprite _bulletSet;
-    sf::Clock _shootCooldown;
 
     float _hpPlayer;
     float _hp;
     bool _isDamagedTaken;
+
+    // Quản lí Weapon
+    std::map<std::string, std::unique_ptr<Weapon>> _skills;
+    std::vector<std::unique_ptr<Weapon>> _weapons;
 protected:
     void initSound();
     void isAttacked();
@@ -46,7 +52,9 @@ public:
     virtual ~Player();
     virtual void setPlayer(float x, float y) = 0;
     virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
-    virtual void attack(const std::string& pose) = 0;
+    virtual void attack(Weapon* weapon) = 0;
+    virtual std::vector<std::unique_ptr<Weapon>>& getBullets() = 0;
+    virtual void updateWeapons(float time, const std::vector<std::string>& tileMap) = 0;
 public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
@@ -59,16 +67,20 @@ public:
     bool getIsHit() const;
     float getHP() const;
     float getHPPlayer() const;
+
+    bool checkLeft() { return _checkLeft; }
+    bool checkRight() { return _checkRight; }
+    bool checkUp() { return _checkUp; }
+    bool checkDown() { return _checkDown; }
 public:
     void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key fire);
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
+    void addBullet(std::unique_ptr<Weapon> bullet);
 };
 
 class Contra : public Player {
-private:
-    std::vector<std::unique_ptr<Weapon>> _weapons;
 public:
-    std::vector<std::unique_ptr<Weapon>>& getBullets();
+    std::vector<std::unique_ptr<Weapon>>& getBullets() override;
     Weapon& getBullet();
 public:
     Contra();
@@ -77,12 +89,9 @@ public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
 public:
-    void useGun();
-    void useKnife();
-public:
     void setSpriteByPose(const std::string& pose, float currentFrame);
-    void attack(const std::string& pose) override;
-    void updateBullets(float time, const std::vector<std::string>& tileMap);
+    void attack(Weapon* weapon) override;
+    void updateWeapons(float time, const std::vector<std::string>& tileMap) override;
 public:
     void testisAttacked() {
         if (isHit) {

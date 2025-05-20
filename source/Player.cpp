@@ -96,7 +96,9 @@ void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::
         _checkDown = false;
     }
     if (sf::Keyboard::isKeyPressed(shoot)) {
-        attack("gun");
+        //std::cout << "Shooting...\n";
+
+        attack(_skills["Gun"].get());
     }
 }
 
@@ -129,6 +131,9 @@ void Player::Collision(bool checkVertical, const std::vector<std::string>& tileM
     }
 }
 
+void Player::addBullet(std::unique_ptr<Weapon> bullet) {
+    _weapons.push_back(std::move(bullet));
+}
 
 // Player Mario
 Contra::Contra() {
@@ -137,13 +142,14 @@ Contra::Contra() {
     _isDamagedTaken = false;
     onGround = false;
     initSound();
+    _skills["Gun"] = std::make_unique<Gun>();
 }
 
 Contra::~Contra() { }
 
 Weapon& Contra::getBullet() { return *_weapon; }
 
- std::vector<std::unique_ptr<Weapon>>& Contra::getBullets() { return _weapons; }
+std::vector<std::unique_ptr<Weapon>>& Contra::getBullets() { return _weapons; }
 
 void Contra::setPlayer(float x, float y) {
     if (!_text.loadFromFile("Player/Contra.png")) {
@@ -305,7 +311,8 @@ void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
     rect.top = bottom - rect.height; // Giữ đáy không đổi
 }
 
-void Contra::updateBullets(float time, const std::vector<std::string>& tileMap) {
+
+void Contra::updateWeapons(float time, const std::vector<std::string>& tileMap) {
     for (auto& weapon : _weapons)
         weapon->update(time, tileMap);
 
@@ -315,31 +322,9 @@ void Contra::updateBullets(float time, const std::vector<std::string>& tileMap) 
         _weapons.end());
 }
 
-void Contra::useGun() {
-    if (_shootCooldown.getElapsedTime().asMilliseconds() >= 500) {
-        auto bullet = std::make_unique<Gun>();
-
-        if (_checkUp) {
-            bullet->Shoot(rect.left + rect.width / 2 - 3, rect.top, BulletDirection::Up);
-        } else if (_checkRight) {
-            bullet->Shoot(rect.left + rect.width / 2 + 8, rect.top + rect.height / 2 - 6, BulletDirection::Right);
-        } else {
-            bullet->Shoot(rect.left - 1, rect.top + rect.height / 2 - 6, BulletDirection::Left);
-        }
-        _weapons.push_back(std::move(bullet));
-        _shootCooldown.restart();
-    }
-}
-
-void Contra::useKnife() {
-    
-}
-
-void Contra::attack(const std::string& pose) {
-    if (pose == "knife") {
-        useKnife();
-    } else if (pose == "gun") {
-        useGun();
+void Contra::attack(Weapon* weapon) {
+    if (weapon) {
+        weapon->attack(*this);
     }
 }
 

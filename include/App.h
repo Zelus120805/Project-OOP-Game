@@ -4,6 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "Player.h"
 #include "Enemy.h"
 #include "Map.h"
@@ -14,25 +16,45 @@ private:
     sf::Texture _tileSet;
 
     Map _map;
-    Contra _contra;
-    Enemy _enemy;
+    Player* _contra;
+    Enemy* _enemy;
 
     sf::Music _music;
     sf::Clock _clock;
 
+    // Pause menu
+    sf::RectangleShape _pauseButton;
+    sf::RectangleShape _continueBg, _restartBg, _exitBg;
+    sf::Text _continueText, _restartText, _exitText;
+    sf::Text _timerText;
+    sf::Clock _gameClock;
+    sf::Time _gameTime;
+    sf::Time _pausedTime;
+
+    // Game
+    sf::Font _font;
+    bool _isPlaying;
+    bool _isPaused = false;
+    bool _isRestart;
+    bool _isExit;
+
     void init();
     void handleEvents();
-    void update(float time);
+    void update(float time, const std::vector<std::string>& currentMap);
     void render();
 private:
     void playerCollisionWithEnemy();
     void bulletCollisionWithEnemy();
     void drawHPBar(const Player& player, sf::Vector2f position);
+    void drawPauseMenu();
 public:
     App();
     virtual ~App();
 
     void run();
+    void clearObjects();
+    void initGame();
+    void runGame(const std::vector<std::string>& level);
 };
 
 #endif // _APP_H_
