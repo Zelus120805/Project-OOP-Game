@@ -2,6 +2,8 @@
 #define _WEAPON_H_
 
 #include <SFML/Graphics.hpp>
+#include <iostream>
+#include <Player.h>
 #include <vector>
 #include <string>
 
@@ -11,6 +13,8 @@ enum class BulletDirection {
     Right,
     Up
 };
+
+class Player;
 
 class Weapon {
 protected:
@@ -23,6 +27,8 @@ protected:
     float _damage;
 
     BulletDirection _direction;
+
+    sf::Clock _shootCooldown;
 public:
     sf::Sprite getSprite() const;
     sf::Vector2f getPosition() const;
@@ -32,6 +38,7 @@ public:
     virtual ~Weapon() = default;
 public:
     virtual void update(float time, const std::vector<std::string>& currentMap) = 0;
+    virtual void attack(Player& player) = 0;
     void collision(const std::vector<std::string>& tileMap);
 
     // Getters & utility
@@ -47,6 +54,7 @@ public:
     Gun();
     ~Gun() override { }
 
+    void attack(Player& player) override;
     void update(float time, const std::vector<std::string>& currentMap) override;
     void Shoot(float x, float y, BulletDirection dir);
 };

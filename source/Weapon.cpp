@@ -1,5 +1,6 @@
 #include "Weapon.h"
 #include "Map.h" // để dùng offsetX, offsetY
+#include "Player.h"
 
 void Weapon::collision(const std::vector<std::string>& tileMap) {
     for (int i = _rect.top / 16; i < (_rect.top + _rect.height) / 16; ++i) {
@@ -32,6 +33,7 @@ void Weapon::setActive(bool value) { _active = value; }
 Gun::Gun() {
     _active = false;
     _damage = 10.f;
+    _shootCooldown.restart();
 }
 
 void Gun::Shoot(float x, float y, BulletDirection dir) {
@@ -66,5 +68,22 @@ void Gun::update(float time, const std::vector<std::string>& currentMap) {
     if (_rect.left < 0 || _rect.left > offsetX + 800.f ||
         _rect.top < 0 || _rect.top > offsetY + 800.f) {
         _active = false;
+    }
+}
+
+void Gun::attack(Player& player) {
+    if (_shootCooldown.getElapsedTime().asMilliseconds() >= 500) {
+        auto bullet = std::make_unique<Gun>();
+
+        if (player.checkUp()) {
+            bullet->Shoot(player.getRect().left + player.getRect().width / 2 - 3, player.getRect().top, BulletDirection::Up);
+        } else if (player.checkRight()) {
+            bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Right);
+        } else {
+            bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Left);
+        }
+
+        player.addBullet(std::move(bullet));  // giả sử Contra có addBullet()
+        _shootCooldown.restart();
     }
 }
