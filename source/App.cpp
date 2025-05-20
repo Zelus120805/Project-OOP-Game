@@ -7,7 +7,7 @@ App::App() : _window(sf::VideoMode(450, 300), "Game"), _contra() {
 App::~App() {}
 
 void App::init() {   
-    if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
+    if (!_map.loadBackground("Tiles/Assets/Background_3.png")) {
         std::cerr << "Failed to load background\n";
     }
 
@@ -49,7 +49,7 @@ void App::update(float time) {
 }
 
 void App::render() {
-    _window.clear(sf::Color(107, 140, 255));
+    // _window.clear(sf::Color(107, 140, 255));
     _map.render(_window, _tileSet);
 
     _window.draw(_contra.getPlayerSprite());
