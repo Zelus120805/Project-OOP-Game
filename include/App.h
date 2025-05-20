@@ -25,6 +25,11 @@ private:
     // Pause menu
     sf::RectangleShape _pauseButton;
     sf::RectangleShape _continueBg, _restartBg, _exitBg;
+    sf::RectangleShape _playButton;
+    sf::RectangleShape _optionsButton;
+    sf::RectangleShape _exitButton;
+    sf::Texture _mainMenu;
+    sf::Sprite _backgroundMainMenu;
     sf::Text _continueText, _restartText, _exitText;
     sf::Text _timerText;
     sf::Clock _gameClock;
@@ -33,6 +38,7 @@ private:
 
     // Game
     sf::Font _font;
+    sf::Font _fontTime;
     bool _isPlaying;
     bool _isPaused = false;
     bool _isRestart;

@@ -17,11 +17,81 @@ void App::init() {
     _isRestart = false;
     _isExit = false;
 
-    // Pause menu
-    if (!_font.loadFromFile("Font/OpenSans-Regular.ttf")) {
+    if (!_font.loadFromFile("Font/04B_30__.ttf")) {
         std::cout << "Không thể tải font.\n";
         exit(1);
     }
+
+    if (!_fontTime.loadFromFile("Font/CHICKEN Pie.ttf")) {
+        std::cout << "Không thể tải font.\n";
+        exit(1);
+    }
+
+    if (!_mainMenu.loadFromFile("Tiles/Assets/BackgroundMainMenu.png")) {
+        std::cout << "Không thể tải file.\n";
+        exit(1);
+    }
+
+    // Main Menu
+    _playButton.setSize(sf::Vector2f(150, 50));
+    _playButton.setPosition(137, 44);
+
+    _optionsButton.setSize(sf::Vector2f(200, 50));
+    _optionsButton.setPosition(112, 110);
+
+    _exitButton.setSize(sf::Vector2f(120, 50));
+    _exitButton.setPosition(150, 176);
+
+    // Pause button (biểu tượng dấu "=" với 2 gạch ngang)
+    _pauseButton.setSize(sf::Vector2f(30, 30));
+    _pauseButton.setPosition(_window.getSize().x - 40, 10);
+    _pauseButton.setFillColor(sf::Color::White);
+
+    // Menu buttons
+    _continueText.setFont(_font);
+    _continueText.setString("Continue");
+    _continueText.setCharacterSize(25);
+    _continueText.setPosition((_window.getSize().x - _continueText.getLocalBounds().width) / 2.f, 70);
+    _continueText.setFillColor(sf::Color::White);
+
+    _restartText.setFont(_font);
+    _restartText.setString("Restart");
+    _restartText.setCharacterSize(25);
+    _restartText.setPosition((_window.getSize().x - _restartText.getLocalBounds().width) / 2.f, 130);
+    _restartText.setFillColor(sf::Color::White);
+
+    _exitText.setFont(_font);
+    _exitText.setString("Exit");
+    _exitText.setCharacterSize(25);
+    _exitText.setPosition((_window.getSize().x - _exitText.getLocalBounds().width) / 2.f, 190);
+    _exitText.setFillColor(sf::Color::White);
+
+    // Continue background
+    _continueBg.setSize(sf::Vector2f(_continueText.getLocalBounds().width + 20, 40));
+    _continueBg.setPosition(_continueText.getPosition().x - 10, _continueText.getPosition().y - 5);
+    _continueBg.setFillColor(sf::Color::White);
+
+    // Restart background
+    _restartBg.setSize(sf::Vector2f(_restartText.getLocalBounds().width + 20, 40));
+    _restartBg.setPosition(_restartText.getPosition().x - 10, _restartText.getPosition().y - 5);
+    _restartBg.setFillColor(sf::Color::White);
+
+    // Exit background
+    _exitBg.setSize(sf::Vector2f(_exitText.getLocalBounds().width + 20, 40));
+    _exitBg.setPosition(_exitText.getPosition().x - 10, _exitText.getPosition().y - 5);
+    _exitBg.setFillColor(sf::Color::White);
+
+    // Đặt màu chữ đen để nổi bật
+    _continueText.setFillColor(sf::Color::Black);
+    _restartText.setFillColor(sf::Color::Black);
+    _exitText.setFillColor(sf::Color::Black);
+
+    
+    // Timer
+    _timerText.setFont(_fontTime);
+    _timerText.setCharacterSize(15);
+    _timerText.setFillColor(sf::Color::Red);
+    _timerText.setPosition(_window.getSize().x / 2.f - 40, 10);
 }
 
 void App::handleEvents() {
@@ -38,7 +108,6 @@ void App::handleEvents() {
 
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
-        
 
             // Nhấn nút Pause
             if (!_isPaused) {
@@ -61,6 +130,7 @@ void App::handleEvents() {
                 }
 
                 if (_exitBg.getGlobalBounds().contains(mousePos)) {
+                    _isPaused = false;
                     _isExit = true;
                 }
             }
@@ -111,7 +181,7 @@ void App::render() {
         _gameTime = _gameClock.getElapsedTime() + _pausedTime;
     }
     std::stringstream ss;
-    ss << "Time: " << std::fixed << std::setprecision(2) << _gameTime.asSeconds() << "s";
+    ss << "Time: " << std::fixed << std::setprecision(1) << _gameTime.asSeconds() << " s";
     _timerText.setString(ss.str());
 
     // Vẽ các đối tượng
@@ -194,21 +264,55 @@ void App::drawPauseMenu() {
 
 void App::run() {
     init();
-    _isPlaying = true;
-    while (_window.isOpen()) {
-        // handleMenuEvents();   // Xử lý nút bấm "Play", "Exit"
-        // updateMenu(time);     // Update hiệu ứng menu nếu có
-        // renderMenu();         // Vẽ menu lên màn hình
+    _backgroundMainMenu.setTexture(_mainMenu);
+    float scaleX = 450.f / _mainMenu.getSize().x;
+    float scaleY = 300.f / _mainMenu.getSize().y;
+    _backgroundMainMenu.setScale(scaleX, scaleY);
 
-        // Nếu người chơi bấm nút "Play", thì chuyển qua game
-        auto& level = _map.getMap(0);
+    auto& level = _map.getMap(0);
+
+    while (_window.isOpen()) {
+        if (!_isPlaying) {
+            _music.stop();
+
+            sf::Event event;
+            while (_window.pollEvent(event)) {
+                sf::Vector2f mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
+
+                if (event.type == sf::Event::Closed)
+                    _window.close();
+
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                    mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
+
+                    if (_playButton.getGlobalBounds().contains(mousePos)) {
+                        _isPlaying = true;
+                    }
+
+                    if (_optionsButton.getGlobalBounds().contains(mousePos)) {
+                        std::cout << "Options\n";
+                    }
+
+                    if (_exitButton.getGlobalBounds().contains(mousePos)) {
+                        std::cout << "Exit\n";
+                    }
+                }
+            }
+
+            _window.clear();
+            _window.draw(_backgroundMainMenu);
+            _window.display();
+        }
         
         if (_isPlaying) {
             runGame(level);
             if (_isRestart)
                 _isRestart = false;
-            else
+
+            if (_isExit) {
                 _isPlaying = false;
+                _isExit = false;
+            }
         }
     }
 }
@@ -241,56 +345,6 @@ void App::initGame() {
 
     _music.setLoop(true);
     _music.play();
-
-    // Pause button (biểu tượng dấu "=" với 2 gạch ngang)
-    _pauseButton.setSize(sf::Vector2f(30, 30));
-    _pauseButton.setPosition(_window.getSize().x - 40, 10);
-    _pauseButton.setFillColor(sf::Color::White);
-
-    // Menu buttons
-    _continueText.setFont(_font);
-    _continueText.setString("Continue");
-    _continueText.setCharacterSize(25);
-    _continueText.setPosition((_window.getSize().x - _continueText.getLocalBounds().width) / 2.f, 70);
-    _continueText.setFillColor(sf::Color::White);
-
-    _restartText.setFont(_font);
-    _restartText.setString("Restart");
-    _restartText.setCharacterSize(25);
-    _restartText.setPosition((_window.getSize().x - _restartText.getLocalBounds().width) / 2.f, 130);
-    _restartText.setFillColor(sf::Color::White);
-
-    _exitText.setFont(_font);
-    _exitText.setString("Exit");
-    _exitText.setCharacterSize(25);
-    _exitText.setPosition((_window.getSize().x - _exitText.getLocalBounds().width) / 2.f, 190);
-    _exitText.setFillColor(sf::Color::White);
-
-    // Continue background
-    _continueBg.setSize(sf::Vector2f(_continueText.getLocalBounds().width + 20, 40));
-    _continueBg.setPosition(_continueText.getPosition().x - 10, _continueText.getPosition().y - 5);
-    _continueBg.setFillColor(sf::Color::White);
-
-    // Restart background
-    _restartBg.setSize(sf::Vector2f(_restartText.getLocalBounds().width + 20, 40));
-    _restartBg.setPosition(_restartText.getPosition().x - 10, _restartText.getPosition().y - 5);
-    _restartBg.setFillColor(sf::Color::White);
-
-    // Exit background
-    _exitBg.setSize(sf::Vector2f(_exitText.getLocalBounds().width + 20, 40));
-    _exitBg.setPosition(_exitText.getPosition().x - 10, _exitText.getPosition().y - 5);
-    _exitBg.setFillColor(sf::Color::White);
-
-    // Đặt màu chữ đen để nổi bật
-    _continueText.setFillColor(sf::Color::Black);
-    _restartText.setFillColor(sf::Color::Black);
-    _exitText.setFillColor(sf::Color::Black);
-
-    // Timer
-    _timerText.setFont(_font);
-    _timerText.setCharacterSize(15);
-    _timerText.setFillColor(sf::Color::Red);
-    _timerText.setPosition(_window.getSize().x / 2.f - 35, 10);
 }
 
 void App::clearObjects() {
