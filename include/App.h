@@ -14,10 +14,12 @@ class App {
 private:
     sf::RenderWindow _window;
     sf::Texture _tileSet;
+    sf::Texture _enemyTileSet;
 
     Map _map;
     Player* _contra;
-    Enemy* _enemy;
+    Enemy* _slime;
+    //Enemy* _enemy;        // Thêm các dạng enemy khác
 
     sf::Music _music;
     sf::Clock _clock;

@@ -10,7 +10,7 @@ App::~App() {
 
 void App::init() {
     _contra = nullptr;
-    _enemy = nullptr;
+    _slime = nullptr;
 
     _isPlaying = false;
     _isPaused = false;
@@ -86,7 +86,6 @@ void App::init() {
     _restartText.setFillColor(sf::Color::Black);
     _exitText.setFillColor(sf::Color::Black);
 
-    
     // Timer
     _timerText.setFont(_fontTime);
     _timerText.setCharacterSize(15);
@@ -155,7 +154,7 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     _contra->controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
     _contra->update(time, currentMap, _window);
     _contra->updateWeapons(time, currentMap);
-    //_enemy.update(time, currentMap);
+    _slime->update(time, currentMap);
 }
 
 void App::render() {
@@ -194,7 +193,7 @@ void App::render() {
 
     _window.draw(_contra->getPlayerSprite());
     drawHPBar(*_contra, sf::Vector2f(20, 15));
-    _window.draw(_enemy->getSprite());
+    _window.draw(_slime->getSprite());
 
     // 2. Nếu đang pause thì vẽ menu
     if (_isPaused) {
@@ -204,11 +203,11 @@ void App::render() {
 }
 
 void App::playerCollisionWithEnemy() {
-    if (_contra->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
+    if (_contra->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
         if (_contra->getDY() > 0) {
-            _enemy->setDX(0);
+            _slime->setDX(0);
             _contra->setDY(-0.2f);
-            _enemy->setAlive(false);
+            _slime->setAlive(false);
         } else {
             if (!_contra->getIsHit()) {
                 _contra->setIsHit(true);
@@ -223,9 +222,9 @@ void App::bulletCollisionWithEnemy() {
     for (auto& b : _contra->getBullets()) {
         if (!b->isActive()) continue;
 
-        if (b->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
+        if (b->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
             b->setActive(false);        // Ẩn viên đạn
-            _enemy->takeDamage(b->getDamage());
+            _slime->takeDamage(b->getDamage());
         }
     }
 }
@@ -294,7 +293,7 @@ void App::run() {
                     }
 
                     if (_exitButton.getGlobalBounds().contains(mousePos)) {
-                        std::cout << "Exit\n";
+                        return;
                     }
                 }
             }
@@ -321,7 +320,7 @@ void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
     _contra = new Contra();
-    _enemy = new Enemy();
+    _slime = new SlimeEnemy();
     offsetX = 0;
     offsetY = 0;
 
@@ -329,16 +328,14 @@ void App::initGame() {
     _gameClock.restart();
     _pausedTime = sf::Time::Zero;
 
-    if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
+    if (!_map.loadBackground("Tiles/Assets/Background_2.png"))
         std::cerr << "Failed to load background\n";
-    }
 
     if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
         std::cerr << "Error loading Tiles.png\n";
 
     _contra->setPlayer(120, 120);
-
-    //_enemy.setEnemy(_tileSet, 800, 150);
+    _slime->setEnemy(800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";
@@ -350,11 +347,11 @@ void App::initGame() {
 void App::clearObjects() {
     if (_contra)
         delete _contra;
-    if (_enemy)
-        delete _enemy;
+    if (_slime)
+        delete _slime;
         
     _contra = nullptr;
-    _enemy = nullptr;
+    _slime = nullptr;
 }
 
 void App::runGame(const std::vector<std::string>& level) {

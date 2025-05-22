@@ -13,40 +13,11 @@ Enemy::Enemy() {
 
 Enemy::~Enemy() { }
 
-void Enemy::setEnemy(Texture& image, int x, int y) {
-    sprite.setTexture(image);
-    sprite.scale(1.5, 1.5);
-    rect = FloatRect(x, y, 24, 24);
-}
-
-void Enemy::update(float time, const std::vector<std::string>& tileMap) {
-    rect.left += dx * time;
-    Collision(false, tileMap);
-
-    if (!_onGround)
-        dy += 0.0005f * time;
-    rect.top += dy * time;
-    _onGround = false;
-    Collision(true, tileMap);
-
-    currentFrame += time * 0.005f;
-    if (currentFrame > 2) currentFrame -= 2;
-
-    if (life)
-        sprite.setTextureRect(IntRect(18 * int(currentFrame), 0, 16, 16));
-    else
-        sprite.setTextureRect(IntRect(58, 0, 16, 16));
-
-    sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
-}
-
 // --- Collision ---
 void Enemy::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
         for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-            if (tileMap[i][j] == 'P' || tileMap[i][j] == 'k' ||
-                tileMap[i][j] == '0' || tileMap[i][j] == 'r' ||
-                tileMap[i][j] == 't') {
+            if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                 if (checkVertical) {
                     if (dy > 0) {
                         rect.top = i * 16 - rect.height;
@@ -90,7 +61,7 @@ void Enemy::Collision(bool checkVertical, const std::vector<std::string>& tileMa
 // Getters
 FloatRect Enemy::getRect() const { return rect; }
 
-Sprite Enemy::getSprite() const { return sprite; }
+Sprite Enemy::getSprite() const { return _enemySprite; }
 
 bool Enemy::isAlive() const { return life; }
 
@@ -108,4 +79,54 @@ void Enemy::takeDamage(float damage) {
         life = false;
         dx = 0;
     }
+}
+
+void SlimeEnemy::setEnemy(int x, int y) {
+    if (!_enemyTexture.loadFromFile("Enemy/slime.png")) {
+        std::cerr << "Error loading slime.png\n";
+    }
+
+    _enemySprite.setTexture(_enemyTexture);
+    _enemySprite.scale(1.5f, 1.5f);
+    _enemySprite.setOrigin(0.f, 0.f);   // default không lật
+    rect = sf::FloatRect(x, y, 18, 18);
+    _enemySpeed = 0.02f;
+    dx = dy = _enemySpeed;
+    _isMovingRight = true;
+    // _enemySprite.setTextureRect(sf::IntRect(0, 0, 16, 16)); // frame đầu tiên
+}
+
+void SlimeEnemy::update(float time, const std::vector<std::string>& tileMap) {
+    if (!life) return;
+
+    // Cập nhật vị trí theo trục X
+    rect.left += dx * time;
+    Collision(false, tileMap);
+
+    // Trọng lực
+    if (!_onGround)
+        dy += 0.0005f * time;
+    rect.top += dy * time;
+    _onGround = false;
+    Collision(true, tileMap);
+
+    // Cập nhật frame animation
+    currentFrame += 0.005f * time;
+    if (currentFrame >= maxFrame) currentFrame -= maxFrame;
+
+    int frameIndex = static_cast<int>(currentFrame);
+    int frameY = 1; // nếu có nhiều hàng animation thì thay đổi cái này
+
+    if (_isMovingRight) {
+        _enemySprite.setScale(1.5f, 1.5f);
+        _enemySprite.setOrigin(0.f, 0.f);
+    } else {
+        _enemySprite.setScale(-1.5f, 1.5f);
+        _enemySprite.setOrigin(FRAME_WIDTH, 0.f); // để giữ vị trí khi lật trái
+    }
+
+    _enemySprite.setTextureRect(sf::IntRect(frameIndex * FRAME_WIDTH, frameY * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT));
+
+    // Cập nhật vị trí sprite
+    _enemySprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 }

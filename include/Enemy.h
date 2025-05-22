@@ -2,25 +2,29 @@
 #define _ENEMY_H_
 
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include "Map.h"
 
 class Enemy {
-private:
+protected:
     float dx, dy;
     sf::FloatRect rect;
-    sf::Sprite sprite;
+    sf::Sprite _enemySprite;
     float currentFrame;
+    int maxFrame = 4; // số frame slime có trong 1 animation hàng
     bool life;
     bool _onGround;
-
     float _hp;
+    const int FRAME_WIDTH = 16;
+    const int FRAME_HEIGHT = 16;
+
 public:
     Enemy();
     virtual ~Enemy();
 public:
-    void setEnemy(sf::Texture& image, int x, int y);
-    void update(float time, const std::vector<std::string>& tileMap);
-    void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
+    virtual void setEnemy(int x, int y) = 0;
+    virtual void update(float time, const std::vector<std::string>& tileMap) = 0;
+    virtual void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
 public:
     // Getters
     sf::FloatRect getRect() const;
@@ -31,8 +35,19 @@ public:
     // Setters
     void setDX(float value);
     void setAlive(bool value);
-    void takeDamage(float damage);
+    virtual void takeDamage(float damage);
 
+};
+
+class SlimeEnemy : public Enemy {
+private:
+    sf::Texture _enemyTexture;
+    float _enemySpeed;
+    bool _isMovingRight;
+    bool _isMovingLeft;
+public:
+    void setEnemy(int x, int y) override;
+    void update(float time, const std::vector<std::string>& tileMap) override;
 };
 
 #endif // _ENEMY_H_
