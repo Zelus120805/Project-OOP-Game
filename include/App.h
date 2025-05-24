@@ -16,7 +16,8 @@ private:
     sf::Texture _tileSet;
 
     Map _map;
-    Player* _contra;
+    Player* _player1;
+    Player* _player2;
     Enemy* _enemy;
 
     sf::Music _music;
