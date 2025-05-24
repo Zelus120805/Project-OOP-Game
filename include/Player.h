@@ -51,9 +51,7 @@ public:
     virtual ~Player();
     virtual void setPlayer(float x, float y) = 0;
     virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
-    virtual void attack(Weapon* weapon) = 0;
-    virtual std::vector<std::unique_ptr<Weapon>>& getBullets() = 0;
-    virtual void updateWeapons(float time, const std::vector<std::string>& tileMap) = 0;
+    virtual void setSpriteByPose(const std::string& pose, float currentFrame) = 0;
 public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
@@ -71,10 +69,15 @@ public:
     bool checkRight() { return _checkRight; }
     bool checkUp() { return _checkUp; }
     bool checkDown() { return _checkDown; }
+
+    Weapon& getBullet() { return *_weapon; }
+    std::vector<std::unique_ptr<Weapon>>& getBullets() { return _weapons; }
 public:
     void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key fire);
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
     void addBullet(std::unique_ptr<Weapon> bullet);
+    void attack(Weapon* weapon);
+    void updateWeapons(float time, const std::vector<std::string>& tileMap);
 };
 
 class Contra : public Player {
@@ -82,18 +85,12 @@ private:
     sf::Texture _text;
     sf::Texture _textBullet;
 public:
-    std::vector<std::unique_ptr<Weapon>>& getBullets() override;
-    Weapon& getBullet();
-public:
     Contra();
     ~Contra() override;
 public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
-public:
-    void setSpriteByPose(const std::string& pose, float currentFrame);
-    void attack(Weapon* weapon) override;
-    void updateWeapons(float time, const std::vector<std::string>& tileMap) override;
+    void setSpriteByPose(const std::string& pose, float currentFrame) override;
 public:
     void testisAttacked() {
         if (isHit) {
@@ -107,18 +104,12 @@ private:
     sf::Texture _text;
     sf::Texture _textBullet;
 public:
-    std::vector<std::unique_ptr<Weapon>>& getBullets() override;
-    Weapon& getBullet();
-public:
     Lugci();
     ~Lugci() override;
 public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
-public:
-    void setSpriteByPose(const std::string& pose, float currentFrame);
-    void attack(Weapon* weapon) override;
-    void updateWeapons(float time, const std::vector<std::string>& tileMap) override;
+    void setSpriteByPose(const std::string& pose, float currentFrame) override;
 public:
     void testisAttacked() {
         if (isHit) {

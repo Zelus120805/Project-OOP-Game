@@ -135,6 +135,23 @@ void Player::addBullet(std::unique_ptr<Weapon> bullet) {
     _weapons.push_back(std::move(bullet));
 }
 
+// Atack with weapon
+void Player::updateWeapons(float time, const std::vector<std::string>& tileMap) {
+    for (auto& weapon : _weapons)
+        weapon->update(time, tileMap);
+
+    _weapons.erase(
+        std::remove_if(_weapons.begin(), _weapons.end(),
+                       [](const std::unique_ptr<Weapon>& b) { return !b->isActive(); }),
+        _weapons.end());
+}
+
+void Player::attack(Weapon* weapon) {
+    if (weapon) {
+        weapon->attack(*this);
+    }
+}
+
 // Player Contra
 Contra::Contra() {
     _weapon = new Gun();
@@ -147,10 +164,6 @@ Contra::Contra() {
 
 Contra::~Contra() { }
 
-Weapon& Contra::getBullet() { return *_weapon; }
-
-std::vector<std::unique_ptr<Weapon>>& Contra::getBullets() { return _weapons; }
-
 void Contra::setPlayer(float x, float y) {
     if (!_text.loadFromFile("Player/Contra.png")) {
         std::cerr << "Error loading Contra.png\n";
@@ -159,7 +172,7 @@ void Contra::setPlayer(float x, float y) {
     _playerSet.setTexture(_text);
     _bulletSet.setTexture(_text);
 
-    rect = sf::FloatRect(x, y, 24, 36);
+    rect = sf::FloatRect(x, y, 24, 35);
     dx = dy = 0;
     currentFrame = 0;
     _checkLeft = false;
@@ -167,7 +180,7 @@ void Contra::setPlayer(float x, float y) {
     _checkUp = false;
     _checkDown = false;
 
-    _playerSet.setTextureRect(sf::IntRect(25 * 8 - 2, 8 - 4, 24, 32 + 4));
+    _playerSet.setTextureRect(sf::IntRect(25 * 8 - 2, 8 - 4, 24, 36));
     _bulletSet.setTextureRect(sf::IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6));
 }
 
@@ -296,36 +309,14 @@ void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
     // Set sprite texture rect
     _playerSet.setTextureRect(sf::IntRect(spriteX, spriteY, width, height));
 
-    // Set sprite position (chỉnh thấp nếu cần)
-    _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY);
-
     float bottom = rect.top + rect.height;  // Giữ vị trí đáy
-    if (pose == "right" || pose == "left" || pose == "run_right" || pose == "run_left") {
-        rect.width = 24;
-        rect.height = 36;
-    } 
-    else {
-        rect.width = std::abs(width);
-        rect.height = std::abs(height);
-    }
+
+    rect.width = std::abs(width) - 8;
+    rect.height = std::abs(height) - 6;
+
+    _playerSet.setPosition(rect.left - offsetX - 8 / 2.f, rect.top - offsetY - 6);
 
     rect.top = bottom - rect.height; // Giữ đáy không đổi
-}
-
-void Contra::updateWeapons(float time, const std::vector<std::string>& tileMap) {
-    for (auto& weapon : _weapons)
-        weapon->update(time, tileMap);
-
-    _weapons.erase(
-        std::remove_if(_weapons.begin(), _weapons.end(),
-                       [](const std::unique_ptr<Weapon>& b) { return !b->isActive(); }),
-        _weapons.end());
-}
-
-void Contra::attack(Weapon* weapon) {
-    if (weapon) {
-        weapon->attack(*this);
-    }
 }
 
 // Player Lugci
@@ -340,10 +331,6 @@ Lugci::Lugci() {
 
 Lugci::~Lugci() { }
 
-Weapon& Lugci::getBullet() { return *_weapon; }
-
-std::vector<std::unique_ptr<Weapon>>& Lugci::getBullets() { return _weapons; }
-
 void Lugci::setPlayer(float x, float y) {
     if (!_text.loadFromFile("Player/Lugci.png")) {
         std::cerr << "Error loading Lugci.png\n";
@@ -356,7 +343,7 @@ void Lugci::setPlayer(float x, float y) {
     _playerSet.setTexture(_text);
     _bulletSet.setTexture(_textBullet);
 
-    rect = sf::FloatRect(x, y, 24, 36);
+    rect = sf::FloatRect(x, y, 24, 35);
     dx = dy = 0;
     currentFrame = 0;
     _checkLeft = false;
@@ -493,35 +480,13 @@ void Lugci::setSpriteByPose(const std::string& pose, float currentFrame) {
     // Set sprite texture rect
     _playerSet.setTextureRect(sf::IntRect(spriteX, spriteY, width, height));
 
-    // Set sprite position (chỉnh thấp nếu cần)
-    _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY);
-
     float bottom = rect.top + rect.height;  // Giữ vị trí đáy
-    if (pose == "right" || pose == "left" || pose == "run_right" || pose == "run_left") {
-        rect.width = 24;
-        rect.height = 36;
-    } 
-    else {
-        rect.width = std::abs(width);
-        rect.height = std::abs(height);
-    }
+
+    rect.width = std::abs(width) - 8;
+    rect.height = std::abs(height) - 6;
+
+    _playerSet.setPosition(rect.left - offsetX - 8 / 2.f, rect.top - offsetY - 6);
 
     rect.top = bottom - rect.height; // Giữ đáy không đổi
-}
-
-void Lugci::updateWeapons(float time, const std::vector<std::string>& tileMap) {
-    for (auto& weapon : _weapons)
-        weapon->update(time, tileMap);
-
-    _weapons.erase(
-        std::remove_if(_weapons.begin(), _weapons.end(),
-                       [](const std::unique_ptr<Weapon>& b) { return !b->isActive(); }),
-        _weapons.end());
-}
-
-void Lugci::attack(Weapon* weapon) {
-    if (weapon) {
-        weapon->attack(*this);
-    }
 }
 
