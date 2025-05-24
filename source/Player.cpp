@@ -135,7 +135,7 @@ void Player::addBullet(std::unique_ptr<Weapon> bullet) {
     _weapons.push_back(std::move(bullet));
 }
 
-// Player Mario
+// Player Contra
 Contra::Contra() {
     _weapon = new Gun();
     _hp = _hpPlayer = 100.f;
@@ -159,7 +159,7 @@ void Contra::setPlayer(float x, float y) {
     _playerSet.setTexture(_text);
     _bulletSet.setTexture(_text);
 
-    rect = sf::FloatRect(x, y, 20, 35);
+    rect = sf::FloatRect(x, y, 24, 36);
     dx = dy = 0;
     currentFrame = 0;
     _checkLeft = false;
@@ -167,7 +167,7 @@ void Contra::setPlayer(float x, float y) {
     _checkUp = false;
     _checkDown = false;
 
-    _playerSet.setTextureRect(sf::IntRect(24 * 8, 8 - 5, 30, 32 + 4));
+    _playerSet.setTextureRect(sf::IntRect(25 * 8 - 2, 8 - 4, 24, 32 + 4));
     _bulletSet.setTextureRect(sf::IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6));
 }
 
@@ -207,9 +207,9 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
             bool touchingWall = false;
 
             if (_checkRight) {
-                int j = (rect.left + targetWidth - 1) / 16;
+                int j = (rect.left + rect.width + diff) / 16;
                 for (int i = i1; i <= i2; i++) {
-                    if (tileMap[i][j] != ' ') {
+                    if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                         touchingWall = true;
                         break;
                     }
@@ -221,7 +221,7 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
             } else { // đang quay trái
                 int j = (rect.left - diff) / 16;
                 for (int i = i1; i <= i2; i++) {
-                    if (tileMap[i][j] != ' ') {
+                    if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                         touchingWall = true;
                         break;
                     }
@@ -301,16 +301,16 @@ void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
 
     float bottom = rect.top + rect.height;  // Giữ vị trí đáy
     if (pose == "right" || pose == "left" || pose == "run_right" || pose == "run_left") {
-        rect.width = 20;
-        rect.height = 35;
-    } else {
+        rect.width = 24;
+        rect.height = 36;
+    } 
+    else {
         rect.width = std::abs(width);
         rect.height = std::abs(height);
     }
 
     rect.top = bottom - rect.height; // Giữ đáy không đổi
 }
-
 
 void Contra::updateWeapons(float time, const std::vector<std::string>& tileMap) {
     for (auto& weapon : _weapons)
@@ -328,5 +328,200 @@ void Contra::attack(Weapon* weapon) {
     }
 }
 
+// Player Lugci
+Lugci::Lugci() {
+    _weapon = new Gun();
+    _hp = _hpPlayer = 100.f;
+    _isDamagedTaken = false;
+    onGround = false;
+    initSound();
+    _skills["Gun"] = std::make_unique<Gun>();
+}
 
+Lugci::~Lugci() { }
+
+Weapon& Lugci::getBullet() { return *_weapon; }
+
+std::vector<std::unique_ptr<Weapon>>& Lugci::getBullets() { return _weapons; }
+
+void Lugci::setPlayer(float x, float y) {
+    if (!_text.loadFromFile("Player/Lugci.png")) {
+        std::cerr << "Error loading Lugci.png\n";
+    }
+
+    if (!_textBullet.loadFromFile("Player/Contra.png")) {
+        std::cerr << "Error loading Contra.png\n";
+    }
+
+    _playerSet.setTexture(_text);
+    _bulletSet.setTexture(_textBullet);
+
+    rect = sf::FloatRect(x, y, 24, 36);
+    dx = dy = 0;
+    currentFrame = 0;
+    _checkLeft = false;
+    _checkRight = true;
+    _checkUp = false;
+    _checkDown = false;
+
+    _playerSet.setTextureRect(sf::IntRect(18 * 8 + 1, 20, 24, 36));
+    _bulletSet.setTextureRect(sf::IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6));
+}
+
+void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) {
+    rect.left += dx * time;
+    Collision(false, tileMap);
+
+    if (!onGround)
+        dy += 0.0005f * time;
+    rect.top += dy * time;
+    onGround = false;
+    Collision(true, tileMap);
+
+    currentFrame += time * 0.005f;
+    if (currentFrame > 5)
+        currentFrame = 0;
+
+    if (dx > 0) {
+        setSpriteByPose("run_right", currentFrame);
+    } else if (dx < 0) {
+        setSpriteByPose("run_left", currentFrame);
+    } else {
+        if (!_checkDown && !_checkUp) {
+            if (_checkLeft)
+                setSpriteByPose("left", currentFrame);
+            else
+                setSpriteByPose("right", currentFrame);
+        } else if (_checkUp) {
+            setSpriteByPose("up", currentFrame);
+        }  else if (_checkDown) {
+            // Tính kích thước nằm
+            int targetWidth = 34; // width khi nằm
+            int diff = targetWidth - 24; // chênh lệch so với khi đứng
+
+            int i1 = rect.top / 16;
+            int i2 = (rect.top + rect.height - 1) / 16;
+            bool touchingWall = false;
+
+            if (_checkRight) {
+                int j = (rect.left + rect.width + diff) / 16;
+                for (int i = i1; i <= i2; i++) {
+                    if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
+                        touchingWall = true;
+                        break;
+                    }
+                }
+
+                if (touchingWall) {
+                    rect.left -= diff; // đẩy ra xa đủ để nằm không bị cấn
+                }
+            } else { // đang quay trái
+                int j = (rect.left - diff) / 16;
+                for (int i = i1; i <= i2; i++) {
+                    if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
+                        touchingWall = true;
+                        break;
+                    }
+                }
+
+                if (touchingWall) {
+                    rect.left += diff; // đẩy ra phải
+                }
+            }
+
+            setSpriteByPose("down", currentFrame); // cuối cùng mới pose sau khi đẩy
+        }
+    }
+
+    dx = 0;
+
+    isAttacked();
+}
+
+void Lugci::setSpriteByPose(const std::string& pose, float currentFrame) {
+    // Kích thước sprite mặc định
+    int spriteX = 0, spriteY = 0, width = 24, height = 32;
+
+    if (pose == "run_right") {
+        spriteX = 18 * 8 - 1 + 24 * int(currentFrame);
+        spriteY = 17 * 8 - 4;
+        width = 24;
+        height = 32 + 4;
+    } else if (pose == "run_left") {
+        spriteX = 18 * 8 - 1 + 24 * int(currentFrame) + 24;
+        spriteY = 17 * 8 - 4;
+        width = -24;
+        height = 32 + 4;
+    } else if (pose == "right") {
+        spriteX = 18 * 8 + 1;
+        spriteY = 17;
+        width = 24;
+        height = 32 + 4;
+    } else if (pose == "left") {
+        spriteX = 18 * 8 + 1 + 24;
+        spriteY = 17;
+        width = -24;
+        height = 32 + 4;
+    } else if (pose == "up") {
+        if (_checkRight) {
+            spriteX = 25 * 8 + 3;
+            spriteY = 7;
+            width = 18;
+            height = 46;
+        }
+        else {
+            spriteX = 25 * 8 + 3 + 18;
+            spriteY = 7;
+            width = -18;
+            height = 46;
+        }
+    } else if (pose == "down") {
+        if (_checkRight) {
+            spriteX = 18 * 8;
+            spriteY = 22 * 8 - 1;
+            width = 34;
+            height = 17;
+        }
+        else {
+            spriteX = 18 * 8 + 34;
+            spriteY = 22 * 8 - 1;
+            width = -34;
+            height = 17;
+        }
+    }
+
+    // Set sprite texture rect
+    _playerSet.setTextureRect(sf::IntRect(spriteX, spriteY, width, height));
+
+    // Set sprite position (chỉnh thấp nếu cần)
+    _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY);
+
+    float bottom = rect.top + rect.height;  // Giữ vị trí đáy
+    if (pose == "right" || pose == "left" || pose == "run_right" || pose == "run_left") {
+        rect.width = 24;
+        rect.height = 36;
+    } 
+    else {
+        rect.width = std::abs(width);
+        rect.height = std::abs(height);
+    }
+
+    rect.top = bottom - rect.height; // Giữ đáy không đổi
+}
+
+void Lugci::updateWeapons(float time, const std::vector<std::string>& tileMap) {
+    for (auto& weapon : _weapons)
+        weapon->update(time, tileMap);
+
+    _weapons.erase(
+        std::remove_if(_weapons.begin(), _weapons.end(),
+                       [](const std::unique_ptr<Weapon>& b) { return !b->isActive(); }),
+        _weapons.end());
+}
+
+void Lugci::attack(Weapon* weapon) {
+    if (weapon) {
+        weapon->attack(*this);
+    }
+}
 

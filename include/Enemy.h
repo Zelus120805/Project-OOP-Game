@@ -23,7 +23,7 @@ public:
     virtual ~Enemy();
 public:
     virtual void setEnemy(int x, int y) = 0;
-    virtual void update(float time, const std::vector<std::string>& tileMap) = 0;
+    virtual void updateEnemy(float time, const std::vector<std::string>& tileMap) = 0;
     virtual void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
 public:
     // Getters
@@ -47,7 +47,7 @@ private:
     bool _isMovingLeft;
 public:
     void setEnemy(int x, int y) override;
-    void update(float time, const std::vector<std::string>& tileMap) override;
+    void updateEnemy(float time, const std::vector<std::string>& tileMap) override;
 };
 
 #endif // _ENEMY_H_

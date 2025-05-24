@@ -17,9 +17,9 @@ private:
     sf::Texture _enemyTileSet;
 
     Map _map;
-    Player* _contra;
+    Player* _player1;
+    Player* _player2;
     Enemy* _slime;
-    //Enemy* _enemy;        // Thêm các dạng enemy khác
 
     sf::Music _music;
     sf::Clock _clock;

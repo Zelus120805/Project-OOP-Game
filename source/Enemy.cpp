@@ -96,7 +96,7 @@ void SlimeEnemy::setEnemy(int x, int y) {
     // _enemySprite.setTextureRect(sf::IntRect(0, 0, 16, 16)); // frame đầu tiên
 }
 
-void SlimeEnemy::update(float time, const std::vector<std::string>& tileMap) {
+void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap) {
     if (!life) return;
 
     // Cập nhật vị trí theo trục X

@@ -1,6 +1,6 @@
 #include "App.h"
 
-App::App() : _window(sf::VideoMode(450, 300), "Game"), _contra() {
+App::App() : _window(sf::VideoMode(450, 300), "Game"), _player1(), _player2() {
     init();
 }
 
@@ -9,7 +9,8 @@ App::~App() {
 }
 
 void App::init() {
-    _contra = nullptr;
+    _player1 = nullptr;
+    _player2 = nullptr;
     _slime = nullptr;
 
     _isPlaying = false;
@@ -86,6 +87,7 @@ void App::init() {
     _restartText.setFillColor(sf::Color::Black);
     _exitText.setFillColor(sf::Color::Black);
 
+    
     // Timer
     _timerText.setFont(_fontTime);
     _timerText.setCharacterSize(15);
@@ -141,30 +143,56 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     if (_isPaused)
         return;
 
-    if (_contra->getRect().left > 200)
-        offsetX = _contra->getRect().left - 200;
+    // if (_player1->getRect().left > 200)
+    //     offsetX = _player1->getRect().left - 200;
 
-    if (_contra->getRect().top > 250)
-        offsetY = _contra->getRect().top - 250;
+    // if (_player1->getRect().top > 250)
+    //     offsetY = _player1->getRect().top - 250;
+
+    sf::FloatRect rect1 = _player1->getRect();
+    sf::FloatRect rect2 = _player2->getRect();
+
+    // Tính trung điểm
+    float centerX = (rect1.left + rect1.width / 2 + rect2.left + rect2.width / 2) / 2;
+    float centerY = (rect1.top + rect1.height / 2 + rect2.top + rect2.height / 2) / 2;
+
+    if (centerX > 200)
+        offsetX = centerX - 200;
+    if (centerY > 300)
+        offsetY = centerY - 300;
+
 
     playerCollisionWithEnemy();
     bulletCollisionWithEnemy();
 
     // auto& currentMap = _map.getMap(0);
-    _contra->controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
-    _contra->update(time, currentMap, _window);
-    _contra->updateWeapons(time, currentMap);
-    _slime->update(time, currentMap);
+    _player1->controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
+    _player1->update(time, currentMap, _window);
+    _player1->updateWeapons(time, currentMap);
+
+    _player2->controlPlayer(sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Num2, sf::Keyboard::Num1);
+
+    _player2->update(time, currentMap, _window);
+    _player2->updateWeapons(time, currentMap);
+
+    _slime->updateEnemy(time, currentMap);
 }
 
 void App::render() {
-    // _window.clear(sf::Color(107, 140, 255));
+    _window.clear(sf::Color(107, 140, 255));
     _map.render(_window, _tileSet);
 
-    for (const auto& b : _contra->getBullets()) {
+    for (const auto& b : _player1->getBullets()) {
         if (b->isActive()) {
-            _contra->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
-            _window.draw(_contra->getBulletSprite());
+            _player1->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
+            _window.draw(_player1->getBulletSprite());
+        }
+    }
+
+    for (const auto& b : _player2->getBullets()) {
+        if (b->isActive()) {
+            _player2->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
+            _window.draw(_player2->getBulletSprite());
         }
     }
 
@@ -191,8 +219,11 @@ void App::render() {
     _window.draw(bar1);
     _window.draw(bar2);
 
-    _window.draw(_contra->getPlayerSprite());
-    drawHPBar(*_contra, sf::Vector2f(20, 15));
+    _window.draw(_player1->getPlayerSprite());
+    _window.draw(_player2->getPlayerSprite());
+    
+    drawHPBar(*_player1, sf::Vector2f(20, 15));
+    drawHPBar(*_player2, sf::Vector2f(20, 30));
     _window.draw(_slime->getSprite());
 
     // 2. Nếu đang pause thì vẽ menu
@@ -203,23 +234,46 @@ void App::render() {
 }
 
 void App::playerCollisionWithEnemy() {
-    if (_contra->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
-        if (_contra->getDY() > 0) {
+    if (_player1->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+        if (_player1->getDY() > 0) {
             _slime->setDX(0);
-            _contra->setDY(-0.2f);
+            _player1->setDY(-0.2f);
             _slime->setAlive(false);
         } else {
-            if (!_contra->getIsHit()) {
-                _contra->setIsHit(true);
-                _contra->getHitClock().restart();
-                _contra->setFlashCount(0);
+            if (!_player1->getIsHit()) {
+                _player1->setIsHit(true);
+                _player1->getHitClock().restart();
+                _player1->setFlashCount(0);
+            }
+        }
+    }
+
+    if (_player2->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+        if (_player2->getDY() > 0) {
+            _slime->setDX(0);
+            _player2->setDY(-0.2f);
+            _slime->setAlive(false);
+        } else {
+            if (!_player2->getIsHit()) {
+                _player2->setIsHit(true);
+                _player2->getHitClock().restart();
+                _player2->setFlashCount(0);
             }
         }
     }
 }
 
 void App::bulletCollisionWithEnemy() {
-    for (auto& b : _contra->getBullets()) {
+    for (auto& b : _player1->getBullets()) {
+        if (!b->isActive()) continue;
+
+        if (b->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+            b->setActive(false);        // Ẩn viên đạn
+            _slime->takeDamage(b->getDamage());
+        }
+    }
+
+    for (auto& b : _player2->getBullets()) {
         if (!b->isActive()) continue;
 
         if (b->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
@@ -319,7 +373,8 @@ void App::run() {
 void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
-    _contra = new Contra();
+    _player1 = new Contra();
+    _player2 = new Lugci();
     _slime = new SlimeEnemy();
     offsetX = 0;
     offsetY = 0;
@@ -328,13 +383,16 @@ void App::initGame() {
     _gameClock.restart();
     _pausedTime = sf::Time::Zero;
 
-    if (!_map.loadBackground("Tiles/Assets/Background_2.png"))
+    if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
         std::cerr << "Failed to load background\n";
+    }
 
     if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
         std::cerr << "Error loading Tiles.png\n";
 
-    _contra->setPlayer(120, 120);
+    _player1->setPlayer(110, 120);
+    _player2->setPlayer(120, 120);
+
     _slime->setEnemy(800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
@@ -345,12 +403,17 @@ void App::initGame() {
 }
 
 void App::clearObjects() {
-    if (_contra)
-        delete _contra;
+    // std::cout << "Clear Objects...\n";
+    if (_player1)
+        delete _player1;
+    if (_player2)
+        delete _player2;
+
     if (_slime)
         delete _slime;
         
-    _contra = nullptr;
+    _player1 = nullptr;
+    _player2 = nullptr;
     _slime = nullptr;
 }
 

@@ -25,7 +25,6 @@ protected:
     int flashCount = 0;
     sf::Clock hitClock;
 
-    sf::Texture _text;
     sf::Sprite _playerSet;
 
     Weapon* _weapon = nullptr;
@@ -79,12 +78,40 @@ public:
 };
 
 class Contra : public Player {
+private:
+    sf::Texture _text;
+    sf::Texture _textBullet;
 public:
     std::vector<std::unique_ptr<Weapon>>& getBullets() override;
     Weapon& getBullet();
 public:
     Contra();
     ~Contra() override;
+public:
+    void setPlayer(float x, float y) override;
+    void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
+public:
+    void setSpriteByPose(const std::string& pose, float currentFrame);
+    void attack(Weapon* weapon) override;
+    void updateWeapons(float time, const std::vector<std::string>& tileMap) override;
+public:
+    void testisAttacked() {
+        if (isHit) {
+            isAttacked();
+        }
+    }
+};
+
+class Lugci : public Player {
+private:
+    sf::Texture _text;
+    sf::Texture _textBullet;
+public:
+    std::vector<std::unique_ptr<Weapon>>& getBullets() override;
+    Weapon& getBullet();
+public:
+    Lugci();
+    ~Lugci() override;
 public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
