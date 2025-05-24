@@ -393,7 +393,7 @@ void App::initGame() {
     _player1->setPlayer(110, 120);
     _player2->setPlayer(120, 120);
 
-    //_enemy.setEnemy(_tileSet, 800, 150);
+    _enemy->setEnemy(800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";

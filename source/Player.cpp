@@ -220,7 +220,7 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
             bool touchingWall = false;
 
             if (_checkRight) {
-                int j = (rect.left + rect.width + diff) / 16;
+                int j = (rect.left + rect.width + diff - 1) / 16;
                 for (int i = i1; i <= i2; i++) {
                     if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                         touchingWall = true;
@@ -391,7 +391,7 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
             bool touchingWall = false;
 
             if (_checkRight) {
-                int j = (rect.left + rect.width + diff) / 16;
+                int j = (rect.left + rect.width + diff - 1) / 16;
                 for (int i = i1; i <= i2; i++) {
                     if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                         touchingWall = true;
