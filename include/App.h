@@ -14,6 +14,7 @@ class App {
 private:
     sf::RenderWindow _window;
     sf::Texture _tileSet;
+    sf::Texture _enemyTileSet;
 
     Map _map;
     Player* _player1;

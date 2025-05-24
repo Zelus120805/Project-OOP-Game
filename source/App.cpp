@@ -171,9 +171,11 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     _player1->updateWeapons(time, currentMap);
 
     _player2->controlPlayer(sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Num2, sf::Keyboard::Num1);
+
     _player2->update(time, currentMap, _window);
     _player2->updateWeapons(time, currentMap);
-    //_enemy.update(time, currentMap);
+
+    _enemy->update(time, currentMap);
 }
 
 void App::render() {
@@ -373,7 +375,7 @@ void App::initGame() {
     clearObjects();
     _player1 = new Contra();
     _player2 = new Lugci();
-    _enemy = new Enemy();
+    _enemy = new SlimeEnemy();
     offsetX = 0;
     offsetY = 0;
 
