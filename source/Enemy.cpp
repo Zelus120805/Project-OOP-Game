@@ -116,7 +116,23 @@ void SlimeEnemy::setEnemy(int x, int y) {
 }
 
 void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) {
-    if (!life) return;
+    if (_isDying) {
+        _deathElapsed += time / 1000.f;
+        _deathFrame += _deathFrameSpeed * time / 1000.f;
+
+        if (_deathFrame >= _deathFrames.size())
+            _deathFrame = _deathFrames.size() - 1;
+
+        _enemySprite.setTextureRect(_deathFrames[static_cast<int>(_deathFrame)]);
+
+        if (_deathElapsed >= _deathDuration) {
+            // Kết thúc animation chết, có thể ẩn Enemy hoặc destroy nó
+            life = false;
+        }
+
+        _enemySprite.setPosition(rect.left - offsetX, rect.top - offsetY);
+        return; // Không update thêm gì nữa nếu đang chết
+    }
 
     // Tính khoảng cách giữa Enemy và Player
     sf::Vector2f enemyPos = sf::Vector2f(rect.left + rect.width / 2, rect.top + rect.height / 2);
@@ -209,3 +225,20 @@ void SlimeEnemy::attack(float playerX) {
 }
 
 bool SlimeEnemy::isAttacking() const { return _isAttacking; }
+bool SlimeEnemy::isDying() const { return _isDying; }
+
+void SlimeEnemy::takeDamage(float damage) {
+    _hp -= damage;
+    if (_hp <= 0 && !_isDying) {
+        die(); // Kích hoạt animation chết
+    }
+}
+
+void SlimeEnemy::die() {
+    life = false;    // Enemy không thể gây sát thương nữa
+    dx = 0;          // Không di chuyển
+    dy = 0;
+    _isDying = true; // Bắt đầu animation chết
+    _currentFrame = 0.f;
+    _deathElapsed = 0.f;
+}

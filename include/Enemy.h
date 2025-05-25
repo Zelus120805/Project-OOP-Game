@@ -39,6 +39,7 @@ public:
     void setAlive(bool value);
     virtual void takeDamage(float damage);
     virtual void attack(float playerX) = 0;
+    virtual void die() = 0;
 };
 
 class SlimeEnemy : public Enemy {
@@ -52,18 +53,31 @@ private:
     bool _isMovingRight;
     bool _isMovingLeft;
 
-    bool _isAttacking;
     float _currentFrame;
     float _frameSpeed;
+
+    // Các biến attack
+    bool _isAttacking;
     float _attackDuration;
     float _attackElapsed;
     float _detectionRange = 35.f;  // Phát hiện trong 35px
+
+    // Các biến death
+    bool _isDying = false; // SlimeEnemy đang trong trạng thái dying
+    float _deathFrame = 0.f;
+    float _deathFrameSpeed = 2.f;
+    float _deathDuration = 1.f; // tổng thời gian chết
+    float _deathElapsed = 0.f;
+
 public:
     bool isAttacking() const;
+    bool isDying() const;
 public:
     void setEnemy(int x, int y) override;
     void updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) override;
     void attack(float playerX) override;
+    void die() override;
+    void takeDamage(float damage) override;
 };
 
 #endif // _ENEMY_H_
