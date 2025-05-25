@@ -12,7 +12,6 @@ protected:
     float dx, dy;
     sf::FloatRect rect;
     sf::Sprite _enemySprite;
-    // float currentFrame;
     int maxFrame = 4; // số frame slime có trong 1 animation hàng
     bool life;
     bool _onGround;
@@ -36,7 +35,6 @@ public:
 public:
     // Setters
     void setDX(float value);
-    void setAlive(bool value);
     virtual void takeDamage(float damage);
     virtual void attack(float playerX) = 0;
     virtual void die() = 0;

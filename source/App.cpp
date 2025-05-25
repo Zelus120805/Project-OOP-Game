@@ -239,7 +239,7 @@ void App::playerCollisionWithEnemy() {
         if (_player1->getDY() > 0) {
             _enemy->setDX(0);
             _player1->setDY(-0.2f);
-            _enemy->setAlive(false);
+            _enemy->die();
         } else {
             if (!_player1->getIsHit()) {
                 _player1->setIsHit(true);
@@ -253,7 +253,7 @@ void App::playerCollisionWithEnemy() {
         if (_player2->getDY() > 0) {
             _enemy->setDX(0);
             _player2->setDY(-0.2f);
-            _enemy->setAlive(false);
+            _enemy->die();
         } else {
             if (!_player2->getIsHit()) {
                 _player2->setIsHit(true);

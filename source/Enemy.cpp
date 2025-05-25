@@ -5,7 +5,6 @@ using namespace sf;
 Enemy::Enemy() {
     dx = 0.05f;
     dy = 0;
-    // currentFrame = 0;
     life = true;
     _hp = 100;
     _onGround = false;
@@ -43,19 +42,6 @@ void Enemy::Collision(bool checkVertical, const std::vector<std::string>& tileMa
             }
         }
     }
-
-    // for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
-    //     for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-    //         if (tileMap[i][j] == 'P' || tileMap[i][j] == '0') {
-    //             if (dx > 0) { 
-    //                 rect.left = j * 16 - rect.width; dx = -dx; 
-    //             }
-    //             else if (dx < 0) { 
-    //                 rect.left = j * 16 + 16; dx = -dx; 
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 // Getters
@@ -69,8 +55,6 @@ float Enemy::getDX() const { return dx; }
 
 // Setters
 void Enemy::setDX(float value) { dx = value; }
-
-void Enemy::setAlive(bool value) { life = value; }
 
 void Enemy::takeDamage(float damage) {
     _hp -= damage;
