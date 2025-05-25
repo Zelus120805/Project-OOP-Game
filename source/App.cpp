@@ -11,7 +11,7 @@ App::~App() {
 void App::init() {
     _player1 = nullptr;
     _player2 = nullptr;
-    _slime = nullptr;
+    _enemy = nullptr;
 
     _isPlaying = false;
     _isPaused = false;
@@ -175,8 +175,8 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     _player2->update(time, currentMap, _window);
     _player2->updateWeapons(time, currentMap);
 
-    _slime->updateEnemy(time, currentMap, *_player1);
-    _slime->updateEnemy(time, currentMap, *_player2);
+    _enemy->updateEnemy(time, currentMap, *_player1);
+    _enemy->updateEnemy(time, currentMap, *_player2);
 }
 
 void App::render() {
@@ -225,7 +225,7 @@ void App::render() {
     
     drawHPBar(*_player1, sf::Vector2f(20, 15));
     drawHPBar(*_player2, sf::Vector2f(20, 30));
-    _window.draw(_slime->getSprite());
+    _window.draw(_enemy->getSprite());
 
     // 2. Nếu đang pause thì vẽ menu
     if (_isPaused) {
@@ -235,11 +235,11 @@ void App::render() {
 }
 
 void App::playerCollisionWithEnemy() {
-    if (_player1->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+    if (_player1->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
         if (_player1->getDY() > 0) {
-            _slime->setDX(0);
+            _enemy->setDX(0);
             _player1->setDY(-0.2f);
-            _slime->setAlive(false);
+            _enemy->setAlive(false);
         } else {
             if (!_player1->getIsHit()) {
                 _player1->setIsHit(true);
@@ -249,11 +249,11 @@ void App::playerCollisionWithEnemy() {
         }
     }
 
-    if (_player2->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+    if (_player2->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
         if (_player2->getDY() > 0) {
-            _slime->setDX(0);
+            _enemy->setDX(0);
             _player2->setDY(-0.2f);
-            _slime->setAlive(false);
+            _enemy->setAlive(false);
         } else {
             if (!_player2->getIsHit()) {
                 _player2->setIsHit(true);
@@ -268,18 +268,18 @@ void App::bulletCollisionWithEnemy() {
     for (auto& b : _player1->getBullets()) {
         if (!b->isActive()) continue;
 
-        if (b->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+        if (b->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
             b->setActive(false);        // Ẩn viên đạn
-            _slime->takeDamage(b->getDamage());
+            _enemy->takeDamage(b->getDamage());
         }
     }
 
     for (auto& b : _player2->getBullets()) {
         if (!b->isActive()) continue;
 
-        if (b->getRect().intersects(_slime->getRect()) && _slime->isAlive()) {
+        if (b->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
             b->setActive(false);        // Ẩn viên đạn
-            _slime->takeDamage(b->getDamage());
+            _enemy->takeDamage(b->getDamage());
         }
     }
 }
@@ -376,7 +376,7 @@ void App::initGame() {
     clearObjects();
     _player1 = new Contra();
     _player2 = new Lugci();
-    _slime = new SlimeEnemy();
+    _enemy = new SlimeEnemy();
     offsetX = 0;
     offsetY = 0;
 
@@ -394,7 +394,7 @@ void App::initGame() {
     _player1->setPlayer(110, 120);
     _player2->setPlayer(120, 120);
 
-    _slime->setEnemy(800, 150);
+    _enemy->setEnemy(800, 150);
 
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";
@@ -410,12 +410,12 @@ void App::clearObjects() {
     if (_player2)
         delete _player2;
 
-    if (_slime)
-        delete _slime;
+    if (_enemy)
+        delete _enemy;
         
     _player1 = nullptr;
     _player2 = nullptr;
-    _slime = nullptr;
+    _enemy = nullptr;
 }
 
 void App::runGame(const std::vector<std::string>& level) {

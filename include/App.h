@@ -19,7 +19,7 @@ private:
     Map _map;
     Player* _player1;
     Player* _player2;
-    Enemy* _slime;
+    Enemy* _enemy;
 
     sf::Music _music;
     sf::Clock _clock;
