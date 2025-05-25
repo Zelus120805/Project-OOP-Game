@@ -5,7 +5,7 @@ using namespace sf;
 Enemy::Enemy() {
     dx = 0.05f;
     dy = 0;
-    currentFrame = 0;
+    // currentFrame = 0;
     life = true;
     _hp = 100;
     _onGround = false;
@@ -86,18 +86,72 @@ void SlimeEnemy::setEnemy(int x, int y) {
         std::cerr << "Error loading slime.png\n";
     }
 
+    // Tạo các frame cho animation
+    for (int i = 0; i < 4; ++i) {
+        _idleFrames.push_back(sf::IntRect(i * FRAME_WIDTH, 0, FRAME_WIDTH, FRAME_HEIGHT));
+    }
+    for (int i = 0; i < 4; ++i) {
+        _walkFrames.push_back(sf::IntRect(i * FRAME_WIDTH, FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT));
+    }
+    for (int i = 0; i < 5; ++i) {
+        _attackFrames.push_back(sf::IntRect(i * FRAME_WIDTH, FRAME_HEIGHT * 2, FRAME_WIDTH, FRAME_HEIGHT));
+    }
+    for (int i = 0; i < 6; ++i) {
+        _deathFrames.push_back(sf::IntRect(i * FRAME_WIDTH, FRAME_HEIGHT * 3, FRAME_WIDTH, FRAME_HEIGHT));
+    }
+    
     _enemySprite.setTexture(_enemyTexture);
-    _enemySprite.scale(1.5f, 1.5f);
-    _enemySprite.setOrigin(0.f, 0.f);   // default không lật
+    _enemySprite.setTextureRect(_idleFrames[0]);  // Bắt đầu với frame idle đầu tiên
+    _enemySprite.scale(1.75f, 1.75f);
+    _enemySprite.setOrigin(8.f, 0.f);   // default không lật
     rect = sf::FloatRect(x, y, 18, 18);
-    _enemySpeed = 0.02f;
+    _enemySpeed = 0.01f;
     dx = dy = _enemySpeed;
     _isMovingRight = true;
-    // _enemySprite.setTextureRect(sf::IntRect(0, 0, 16, 16)); // frame đầu tiên
+    _isAttacking = false;
+    _currentFrame = 0.f;
+    _frameSpeed = 2.f;  // FPS animation
+    _attackDuration = 0.5f;
+    _attackElapsed = 0.f;
 }
 
-void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap) {
+void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) {
     if (!life) return;
+
+    // Tính khoảng cách giữa Enemy và Player
+    sf::Vector2f enemyPos = sf::Vector2f(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    sf::Vector2f playerPos = sf::Vector2f(player.getRect().left + player.getRect().width / 2,
+                                          player.getRect().top + player.getRect().height / 2);
+    // Tính khoảng cách X và Y
+    float distanceX = std::abs(enemyPos.x - playerPos.x);
+    float distanceY = std::abs(enemyPos.y - playerPos.y);
+
+    // Nếu player trong khoảng phát hiện và slime không tấn công thì bắt đầu tấn công
+    if (distanceX < _detectionRange && distanceY < (rect.height + player.getRect().height) * 0.5f) {
+        if (!isAttacking()) {
+            attack(playerPos.x);
+        }
+    }
+
+    // Cập nhật thời gian tấn công
+    if (isAttacking()) {
+        _attackElapsed += time / 10000.f;
+        _currentFrame += _frameSpeed * time / 10000.f;
+        if (_currentFrame >= _attackFrames.size()) _currentFrame = 0;
+
+        _enemySprite.setTextureRect(_attackFrames[static_cast<int>(_currentFrame)]);
+
+        if (_attackElapsed >= _attackDuration) {
+            _isAttacking = false;
+            _currentFrame = 0.f;
+            dx = _enemySpeed * (_isMovingRight ? 1 : -1); // Reset tốc độ bình thường
+        }
+    } else {
+        _currentFrame += _frameSpeed * time / 1000.f;
+        if (_currentFrame >= _idleFrames.size()) _currentFrame = 0;
+
+        _enemySprite.setTextureRect(_idleFrames[static_cast<int>(_currentFrame)]);
+    }
 
     // Cập nhật vị trí theo trục X
     rect.left += dx * time;
@@ -111,22 +165,47 @@ void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap
     Collision(true, tileMap);
 
     // Cập nhật frame animation
-    currentFrame += 0.005f * time;
-    if (currentFrame >= maxFrame) currentFrame -= maxFrame;
-
-    int frameIndex = static_cast<int>(currentFrame);
-    int frameY = 1; // nếu có nhiều hàng animation thì thay đổi cái này
-
-    if (_isMovingRight) {
-        _enemySprite.setScale(1.5f, 1.5f);
-        _enemySprite.setOrigin(0.f, 0.f);
+    if (dx > 0) {
+        _enemySprite.setTextureRect(_walkFrames[static_cast<int>(_currentFrame)]);
+        _enemySprite.setScale(1.75f, 1.75f); // Scale sprite
+        _isMovingRight = true;
+        _isMovingLeft = false;
+    } else if (dx < 0) {
+        _enemySprite.setTextureRect(_walkFrames[static_cast<int>(_currentFrame)]);
+        _enemySprite.setScale(-1.75f, 1.75f); // Lật sprite
+        _isMovingRight = false;
+        _isMovingLeft = true;
     } else {
-        _enemySprite.setScale(-1.5f, 1.5f);
-        _enemySprite.setOrigin(FRAME_WIDTH, 0.f); // để giữ vị trí khi lật trái
+        if (_isMovingRight) {
+            _enemySprite.setTextureRect(_idleFrames[static_cast<int>(_currentFrame)]);
+            _enemySprite.setScale(1.75f, 1.75f); // Scale sprite
+        } else if (_isMovingLeft) {
+            _enemySprite.setTextureRect(_idleFrames[static_cast<int>(_currentFrame)]);
+            _enemySprite.setScale(-1.75f, 1.75f); // Lật sprite
+        }
     }
-
-    _enemySprite.setTextureRect(sf::IntRect(frameIndex * FRAME_WIDTH, frameY * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT));
 
     // Cập nhật vị trí sprite
     _enemySprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 }
+
+void SlimeEnemy::attack(float playerX) {
+    if (!isAttacking() && life) {
+        _isAttacking = true;
+        _attackElapsed = 0.f;
+        _currentFrame = 0.f;
+
+        // Dash về phía Player
+        if (playerX > rect.left) {
+            dx = _enemySpeed * 3.7;  // Dash phải
+        } else {
+            dx = -_enemySpeed * 3.7; // Dash trái
+        }
+
+        dy = 0.f;
+        std::cout << "SlimeEnemy attack animation!\n";
+
+    }
+}
+
+bool SlimeEnemy::isAttacking() const { return _isAttacking; }
