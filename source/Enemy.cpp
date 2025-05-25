@@ -102,9 +102,9 @@ void SlimeEnemy::setEnemy(int x, int y) {
     
     _enemySprite.setTexture(_enemyTexture);
     _enemySprite.setTextureRect(_idleFrames[0]);  // Bắt đầu với frame idle đầu tiên
-    _enemySprite.scale(1.75f, 1.75f);
+    _enemySprite.scale(1.5f, 1.5f);
     _enemySprite.setOrigin(8.f, 0.f);   // default không lật
-    rect = sf::FloatRect(x, y, 18, 18);
+    rect = sf::FloatRect(x, y, 16, 16);
     _enemySpeed = 0.01f;
     dx = dy = _enemySpeed;
     _isMovingRight = true;
@@ -183,21 +183,21 @@ void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap
     // Cập nhật frame animation
     if (dx > 0) {
         _enemySprite.setTextureRect(_walkFrames[static_cast<int>(_currentFrame)]);
-        _enemySprite.setScale(1.75f, 1.75f); // Scale sprite
+        _enemySprite.setScale(1.5f, 1.5f); // Scale sprite
         _isMovingRight = true;
         _isMovingLeft = false;
     } else if (dx < 0) {
         _enemySprite.setTextureRect(_walkFrames[static_cast<int>(_currentFrame)]);
-        _enemySprite.setScale(-1.75f, 1.75f); // Lật sprite
+        _enemySprite.setScale(-1.5f, 1.5f); // Lật sprite
         _isMovingRight = false;
         _isMovingLeft = true;
     } else {
         if (_isMovingRight) {
             _enemySprite.setTextureRect(_idleFrames[static_cast<int>(_currentFrame)]);
-            _enemySprite.setScale(1.75f, 1.75f); // Scale sprite
+            _enemySprite.setScale(1.5f, 1.5f); // Scale sprite
         } else if (_isMovingLeft) {
             _enemySprite.setTextureRect(_idleFrames[static_cast<int>(_currentFrame)]);
-            _enemySprite.setScale(-1.75f, 1.75f); // Lật sprite
+            _enemySprite.setScale(-1.5f, 1.5f); // Lật sprite
         }
     }
 
