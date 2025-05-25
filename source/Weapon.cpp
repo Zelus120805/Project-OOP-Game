@@ -37,7 +37,7 @@ Gun::Gun() {
 }
 
 void Gun::Shoot(float x, float y, BulletDirection dir) {
-    _rect = sf::FloatRect(x, y, 6, 6);
+    _rect = sf::FloatRect(x, y, 4, 4);
     _direction = dir;
     _active = true;
 
@@ -61,7 +61,7 @@ void Gun::update(float time, const std::vector<std::string>& currentMap) {
         _rect.left += _speed * time; // bay ngang
     }
 
-    _tile.setPosition(_rect.left - offsetX, _rect.top - offsetY);
+    _tile.setPosition(_rect.left - offsetX + 1, _rect.top - offsetY - 1);
     collision(currentMap);
 
     // loại bỏ nếu ra khỏi màn hình
@@ -78,9 +78,17 @@ void Gun::attack(Player& player) {
         if (player.checkUp()) {
             bullet->Shoot(player.getRect().left + player.getRect().width / 2 - 3, player.getRect().top, BulletDirection::Up);
         } else if (player.checkRight()) {
-            bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Right);
+            if (!player.checkDown()) {
+                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 10, BulletDirection::Right);
+            } else {
+                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Right);
+            }
         } else {
-            bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Left);
+            if (!player.checkDown()) {
+                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 10, BulletDirection::Left);
+            } else {
+                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Left);
+            }
         }
 
         player.addBullet(std::move(bullet));  // giả sử Contra có addBullet()

@@ -175,7 +175,8 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     _player2->update(time, currentMap, _window);
     _player2->updateWeapons(time, currentMap);
 
-    _enemy->update(time, currentMap);
+    _enemy->updateEnemy(time, currentMap, *_player1);
+    _enemy->updateEnemy(time, currentMap, *_player2);
 }
 
 void App::render() {
