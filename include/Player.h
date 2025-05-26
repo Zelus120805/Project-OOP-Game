@@ -24,6 +24,7 @@ protected:
     bool isHit = false;
     int flashCount = 0;
     sf::Clock hitClock;
+    float _damageEnemy;
 
     sf::Sprite _playerSet;
 
@@ -41,29 +42,38 @@ protected:
     float _hp;
     bool _isDamagedTaken;
 
+    // Die
+    bool _isDying;
+    float _dieX, _dieY;
+    float _deathElapsed;
+    float _deathFrame;
+    float _deathFrameSpeed;
+    std::vector<sf::IntRect> _deathFrames;
+    bool _isDeadCompletely;
+
     // Quản lí Weapon
     std::map<std::string, std::unique_ptr<Weapon>> _skills;
     std::vector<std::unique_ptr<Weapon>> _weapons;
 protected:
     void initSound();
-    void isAttacked();
 public:
     virtual ~Player();
     virtual void setPlayer(float x, float y) = 0;
     virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
     virtual void setSpriteByPose(const std::string& pose, float currentFrame) = 0;
+    void takeDamage();
 public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
     sf::Sprite& getBulletSprite();
     float getDY() const;
     void setDY(float value);
-    void setIsHit(bool value);
+    void setIsHit(bool value, const float&);
     sf::Clock getHitClock();
-    void setFlashCount(int value);
     bool getIsHit() const;
     float getHP() const;
     float getHPPlayer() const;
+    bool finishPlayer() const;
 
     bool checkLeft() { return _checkLeft; }
     bool checkRight() { return _checkRight; }
@@ -92,11 +102,11 @@ public:
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(const std::string& pose, float currentFrame) override;
 public:
-    void testisAttacked() {
-        if (isHit) {
-            isAttacked();
-        }
-    }
+    // void testisAttacked() {
+    //     if (isHit) {
+    //         takeDamage();
+    //     }
+    // }
 };
 
 class Lugci : public Player {
@@ -111,11 +121,11 @@ public:
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(const std::string& pose, float currentFrame) override;
 public:
-    void testisAttacked() {
-        if (isHit) {
-            isAttacked();
-        }
-    }
+    // void testisAttacked() {
+    //     if (isHit) {
+    //         takeDamage();
+    //     }
+    // }
 };
 
 #endif // _PLAYER_H_

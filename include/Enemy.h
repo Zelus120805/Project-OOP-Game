@@ -20,6 +20,7 @@ protected:
     const int FRAME_WIDTH = 16;
     const int FRAME_HEIGHT = 16;
 
+    float _damge;
 public:
     Enemy();
     virtual ~Enemy();
@@ -33,11 +34,12 @@ public:
     sf::Sprite getSprite() const;
     bool isAlive() const;
     float getDX() const;
+    float getDamage() const;
 public:
     // Setters
     void setDX(float value);
     void setAlive(bool value);
-    virtual void takeDamage(float damage);
+    virtual void takeDamage(float damage) = 0;
     virtual void attack(float playerX) = 0;
     virtual void die() = 0;
 };
@@ -68,11 +70,11 @@ private:
     float _deathFrameSpeed = 2.f;
     float _deathDuration = 1.f; // tổng thời gian chết
     float _deathElapsed = 0.f;
-
 public:
     bool isAttacking() const;
     bool isDying() const;
 public:
+    SlimeEnemy();
     void setEnemy(int x, int y) override;
     void updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) override;
     void attack(float playerX) override;

@@ -3,7 +3,7 @@
 using namespace sf;
 
 Enemy::Enemy() {
-    dx = 0.05f;
+    dx = 0.1f;
     dy = 0;
     // currentFrame = 0;
     life = true;
@@ -67,18 +67,15 @@ bool Enemy::isAlive() const { return life; }
 
 float Enemy::getDX() const { return dx; }
 
+float Enemy::getDamage() const { return _damge; }
+
 // Setters
 void Enemy::setDX(float value) { dx = value; }
 
 void Enemy::setAlive(bool value) { life = value; }
 
-void Enemy::takeDamage(float damage) {
-    _hp -= damage;
-    if (_hp <= 0) {
-        dx = 0;
-        life = false;
-        dx = 0;
-    }
+SlimeEnemy::SlimeEnemy() {
+    _damge = 20.f;
 }
 
 void SlimeEnemy::setEnemy(int x, int y) {
@@ -124,13 +121,8 @@ void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap
             _deathFrame = _deathFrames.size() - 1;
 
         _enemySprite.setTextureRect(_deathFrames[static_cast<int>(_deathFrame)]);
-
-        if (_deathElapsed >= _deathDuration) {
-            // Kết thúc animation chết, có thể ẩn Enemy hoặc destroy nó
-            life = false;
-        }
-
         _enemySprite.setPosition(rect.left - offsetX, rect.top - offsetY);
+
         return; // Không update thêm gì nữa nếu đang chết
     }
 
@@ -219,12 +211,12 @@ void SlimeEnemy::attack(float playerX) {
         }
 
         dy = 0.f;
-        std::cout << "SlimeEnemy attack animation!\n";
-
+        // std::cout << "SlimeEnemy attack animation!\n";
     }
 }
 
 bool SlimeEnemy::isAttacking() const { return _isAttacking; }
+
 bool SlimeEnemy::isDying() const { return _isDying; }
 
 void SlimeEnemy::takeDamage(float damage) {

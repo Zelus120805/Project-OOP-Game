@@ -46,6 +46,8 @@ private:
     bool _isRestart;
     bool _isExit;
 
+    bool _2Players;
+
     void init();
     void handleEvents();
     void update(float time, const std::vector<std::string>& currentMap);

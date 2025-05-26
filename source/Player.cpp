@@ -10,14 +10,17 @@ void Player::initSound() {
     sound.setBuffer(buffer);
 }
 
-void Player::isAttacked() {
+void Player::takeDamage() {
     if (isHit) {
         if (!_isDamagedTaken) {
             _isDamagedTaken = true;
-            if (_hp > 0.f)
-                _hp -= 10.f;
-            else
-                _hp = 0.f;
+            _hp = (_hp - _damageEnemy < 0) ? 0 : _hp - _damageEnemy;
+            if (_hp <= 0) {
+                _isDying = true;
+                _playerSet.setColor(sf::Color::Red);
+                return;
+            }
+                
             std::cout << "Player HP: " << _hp << std::endl;
         }
 
@@ -33,6 +36,7 @@ void Player::isAttacked() {
             if (flashCount >= 6) {
                 _isDamagedTaken = false;
                 isHit = false;
+                _damageEnemy = 0.f;
                 flashCount = 0;
                 _playerSet.setColor(sf::Color::White);
             }
@@ -54,15 +58,20 @@ sf::Sprite& Player::getPlayerSprite() { return _playerSet; }
 sf::Sprite& Player::getBulletSprite() { return _bulletSet; }
 float Player::getDY() const { return dy; }
 void Player::setDY(float value) { dy = value; }
-void Player::setIsHit(bool value) { isHit = value; }
 sf::Clock Player::getHitClock() { return hitClock; }
-void Player::setFlashCount(int value) { flashCount = value; }
 bool Player::getIsHit() const { return isHit; }
 float Player::getHP() const { return _hp; }
 float Player::getHPPlayer() const { return _hpPlayer; }
+bool Player::finishPlayer() const { return _isDeadCompletely; }
+void Player::setIsHit(bool value, const float& damage) { 
+    isHit = value;
+    _damageEnemy = damage;
+}
 
 // --- Control / Update ---
 void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key shoot) {
+    if (_isDeadCompletely) return;
+
     if (sf::Keyboard::isKeyPressed(left)) {
         dx = -0.05;
         _checkLeft = true;
@@ -136,7 +145,9 @@ void Player::addBullet(std::unique_ptr<Weapon> bullet) {
 }
 
 // Atack with weapon
-void Player::updateWeapons(float time, const std::vector<std::string>& tileMap) {
+void Player::updateWeapons(float time, const std::vector<std::string>& tileMap) {\
+    if (_isDeadCompletely) return;
+    
     for (auto& weapon : _weapons)
         weapon->update(time, tileMap);
 
@@ -160,6 +171,23 @@ Contra::Contra() {
     onGround = false;
     initSound();
     _skills["Gun"] = std::make_unique<Gun>();
+    flashCount = 0;
+    _damageEnemy = 0.f;
+
+    // Aniamtion die
+    _isDying = false;
+    _deathElapsed = 0.f;
+    _deathFrame = 0.f;
+    _deathFrameSpeed = 2.f;
+    _isDeadCompletely = false;
+    _dieX = _dieY = 0;
+    _deathFrames = {
+        sf::IntRect(30 * 8, 6 * 8 + 3, 24, 24),
+        sf::IntRect(35 * 8 - 2, 6 * 8 + 2, 24, 24),
+        sf::IntRect(25 * 8, 6 * 8 + 2, 24, 24),
+        sf::IntRect(20 * 8 - 2, 6 * 8 + 2, 24, 24),
+        sf::IntRect(39 * 8, 7 * 8 - 2, 36, 12),
+    };
 }
 
 Contra::~Contra() { }
@@ -185,6 +213,33 @@ void Contra::setPlayer(float x, float y) {
 }
 
 void Contra::update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) {
+    if (_isDeadCompletely) {
+        _playerSet.setTextureRect(_deathFrames[static_cast<int>(_deathFrames.size() - 1)]);
+        _playerSet.setPosition(_dieX - offsetX, _dieY - offsetY + 18);
+        return;
+    }
+
+    if (_isDying) {
+        _deathElapsed += time / 1000.f;
+        _deathFrame += _deathFrameSpeed * time / 1000.f;
+
+        if (_deathFrame >= _deathFrames.size())
+            _deathFrame = _deathFrames.size() - 1;
+
+        _playerSet.setTextureRect(_deathFrames[static_cast<int>(_deathFrame)]);
+        _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY + 6);
+
+        if (_deathFrame >= _deathFrames.size() - 1) { 
+            _playerSet.setColor(sf::Color::White);
+            _dieX = rect.left;
+            _dieY = rect.top;
+            rect.left = rect.top = 0; // Reset position
+            _isDeadCompletely = true; // Đã chết hoàn toàn
+        }
+
+        return; // Không update thêm gì nữa nếu đang chết
+    }
+    
     rect.left += dx * time;
     Collision(false, tileMap);
 
@@ -251,7 +306,7 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
 
     dx = 0;
 
-    isAttacked();
+    takeDamage();
 }
 
 void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
@@ -327,6 +382,23 @@ Lugci::Lugci() {
     onGround = false;
     initSound();
     _skills["Gun"] = std::make_unique<Gun>();
+    flashCount = 0;
+    _damageEnemy = 0.f;
+
+    // Aniamtion die
+    _isDying = false;
+    _deathElapsed = 0.f;
+    _deathFrame = 0.f;
+    _deathFrameSpeed = 2.f;
+    _isDeadCompletely = false;
+    _dieX = _dieY = 0;
+    _deathFrames = {
+        sf::IntRect(21 * 8, 24 * 8, 24, 24),
+        sf::IntRect(21 * 8 + 24, 24 * 8, 24, 24),
+        sf::IntRect(21 * 8 + 24 * 2, 24 * 8, 24, 24),
+        sf::IntRect(21 * 8 - 24, 24 * 8, 24, 24),
+        sf::IntRect(21 * 8 + 24 * 3 - 2, 24 * 8 + 12, 34, 12)
+    };
 }
 
 Lugci::~Lugci() { }
@@ -356,6 +428,33 @@ void Lugci::setPlayer(float x, float y) {
 }
 
 void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) {
+    if (_isDeadCompletely) {
+        _playerSet.setTextureRect(_deathFrames[static_cast<int>(_deathFrames.size() - 1)]);
+        _playerSet.setPosition(_dieX - offsetX, _dieY - offsetY + 18);
+        return;
+    }
+
+    if (_isDying) {
+        _deathElapsed += time / 1000.f;
+        _deathFrame += _deathFrameSpeed * time / 1000.f;
+
+        if (_deathFrame >= _deathFrames.size())
+            _deathFrame = _deathFrames.size() - 1;
+
+        _playerSet.setTextureRect(_deathFrames[static_cast<int>(_deathFrame)]);
+        _playerSet.setPosition(rect.left - offsetX, rect.top - offsetY + 6);
+
+        if (_deathFrame >= _deathFrames.size() - 1) { 
+            _playerSet.setColor(sf::Color::White);
+            _dieX = rect.left;
+            _dieY = rect.top;
+            rect.left = rect.top = 0; // Reset position
+            _isDeadCompletely = true; // Đã chết hoàn toàn
+        }
+
+        return; // Không update thêm gì nữa nếu đang chết
+    }
+
     rect.left += dx * time;
     Collision(false, tileMap);
 
@@ -422,7 +521,7 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
 
     dx = 0;
 
-    isAttacked();
+    takeDamage();
 }
 
 void Lugci::setSpriteByPose(const std::string& pose, float currentFrame) {
