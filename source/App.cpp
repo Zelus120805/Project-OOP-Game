@@ -8,41 +8,7 @@ App::~App() {
     clearObjects();
 }
 
-void App::init() {
-    _player1 = nullptr;
-    _player2 = nullptr;
-    _enemy = nullptr;
-
-    _isPlaying = false;
-    _isPaused = false;
-    _isRestart = false;
-    _isExit = false;
-
-    if (!_font.loadFromFile("Font/04B_30__.ttf")) {
-        std::cout << "Không thể tải font.\n";
-        exit(1);
-    }
-
-    if (!_fontTime.loadFromFile("Font/CHICKEN Pie.ttf")) {
-        std::cout << "Không thể tải font.\n";
-        exit(1);
-    }
-
-    if (!_mainMenu.loadFromFile("Tiles/Assets/BackgroundMainMenu.png")) {
-        std::cout << "Không thể tải file.\n";
-        exit(1);
-    }
-
-    // Main Menu
-    _playButton.setSize(sf::Vector2f(150, 50));
-    _playButton.setPosition(137, 44);
-
-    _optionsButton.setSize(sf::Vector2f(200, 50));
-    _optionsButton.setPosition(112, 110);
-
-    _exitButton.setSize(sf::Vector2f(120, 50));
-    _exitButton.setPosition(150, 176);
-
+void App::preparePauseButton() {
     // Pause button (biểu tượng dấu "=" với 2 gạch ngang)
     _pauseButton.setSize(sf::Vector2f(30, 30));
     _pauseButton.setPosition(_window.getSize().x - 40, 10);
@@ -86,13 +52,80 @@ void App::init() {
     _continueText.setFillColor(sf::Color::Black);
     _restartText.setFillColor(sf::Color::Black);
     _exitText.setFillColor(sf::Color::Black);
+}
 
+void App::prepareGameOver() {
+    if (!_gameOverTexture.loadFromFile("Tiles/Assets/GameOver.png")) {
+        std::cout << "Không thể tải file GameOver.\n";
+        exit(1);
+    }
+
+    _gameOverSprite.setTexture(_gameOverTexture);
+    float scaleX = 350.f / _gameOverTexture.getSize().x;
+    float scaleY = 200.f / _gameOverTexture.getSize().y;
+    _gameOverSprite.setScale(scaleX, scaleY);
+    _gameOverSprite.setPosition(_window.getSize().x / 2.f - _gameOverSprite.getGlobalBounds().width / 2.f,
+                        _window.getSize().y / 2.f - _gameOverSprite.getGlobalBounds().height / 2.f - 10);
+
+    // Restart background
+    _restartLose.setSize(sf::Vector2f(205, 25));
+    _restartLose.setPosition(122, 177);
+
+    // Exit background
+    _exitLose.setSize(sf::Vector2f(150, 20));
+    _exitLose.setPosition(150, 210);
+}
+
+void App::init() {
+    _player1 = nullptr;
+    _player2 = nullptr;
+    _enemy = nullptr;
+
+    _isPlaying = false;
+    _isPaused = false;
+    _isRestart = false;
+    _isExit = false;
+
+    if (!_font.loadFromFile("Font/04B_30__.ttf")) {
+        std::cout << "Không thể tải font.\n";
+        exit(1);
+    }
+
+    if (!_fontTime.loadFromFile("Font/CHICKEN Pie.ttf")) {
+        std::cout << "Không thể tải font.\n";
+        exit(1);
+    }
+
+    if (!_mainMenu.loadFromFile("Tiles/Assets/BackgroundMainMenu.png")) {
+        std::cout << "Không thể tải file.\n";
+        exit(1);
+    }
+    _backgroundMainMenu.setTexture(_mainMenu);
+    float scaleX = 450.f / _mainMenu.getSize().x;
+    float scaleY = 300.f / _mainMenu.getSize().y;
+    _backgroundMainMenu.setScale(scaleX, scaleY);
+
+    // Main Menu
+    _1PlayerButton.setSize(sf::Vector2f(224, 45));
+    _1PlayerButton.setPosition(112, 30);
+
+    _2PlayersButton.setSize(sf::Vector2f(224, 45));
+    _2PlayersButton.setPosition(112, 92);
+
+    _optionsButton.setSize(sf::Vector2f(170, 45));
+    _optionsButton.setPosition(140, 150);
+
+    _exitButton.setSize(sf::Vector2f(120, 45));
+    _exitButton.setPosition(165, 209);
     
     // Timer
     _timerText.setFont(_fontTime);
     _timerText.setCharacterSize(15);
     _timerText.setFillColor(sf::Color::Red);
-    _timerText.setPosition(_window.getSize().x / 2.f - 40, 10);
+    _timerText.setPosition(_window.getSize().x / 2.f - 25, 10);
+
+    preparePauseButton();
+    prepareGameOver();
 }
 
 void App::handleEvents() {
@@ -135,12 +168,22 @@ void App::handleEvents() {
                     _isExit = true;
                 }
             }
+
+            if (_isLose) {
+                if (_restartLose.getGlobalBounds().contains(mousePos)) {
+                    _isRestart = true;
+                }
+
+                if (_exitLose.getGlobalBounds().contains(mousePos)) {
+                    _isExit = true;
+                }
+            }
         }
     }
 }
 
 void App::update(float time, const std::vector<std::string>& currentMap) {
-    if (_isPaused)
+    if (_isPaused || _isLose)
         return;
 
     if (_2Players) {
@@ -172,7 +215,7 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
                 offsetY = _player2->getRect().top - 250;
         }
         else {
-            _isPaused = true;
+            _isLose = true;
         }
     }
     else {
@@ -184,7 +227,7 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
                 offsetY = _player1->getRect().top - 300;
         }
         else {
-            _isPaused = true;
+            _isLose = true;
         }
     }
 
@@ -234,7 +277,7 @@ void App::render() {
     bar1.setFillColor(sf::Color::Black);
     bar2.setFillColor(sf::Color::Black);
 
-    if (!_isPaused) {
+    if (!_isPaused && !_isLose) {
         _gameTime = _gameClock.getElapsedTime() + _pausedTime;
     }
     std::stringstream ss;
@@ -250,11 +293,13 @@ void App::render() {
     _window.draw(bar2);
 
     _window.draw(_player1->getPlayerSprite());
-    drawHPBar(*_player1, sf::Vector2f(20, 15));
+    _window.draw(_hpPlayer1Text);
+    drawHPBar(*_player1, sf::Vector2f(70, 15));
 
     if (_2Players) {
         _window.draw(_player2->getPlayerSprite());
-        drawHPBar(*_player2, sf::Vector2f(20, 30));
+        _window.draw(_hpPlayer2Text);
+        drawHPBar(*_player2, sf::Vector2f(70, 30));
     }
 
     _window.draw(_enemy->getSprite());
@@ -263,6 +308,12 @@ void App::render() {
     if (_isPaused) {
         drawPauseMenu();
     }
+
+    // 3. Nếu Game Over thì vẽ Game Over
+    if (_isLose) {
+        drawGameOver();
+    }
+
     _window.display();
 }
 
@@ -330,7 +381,30 @@ void App::drawHPBar(const Player& player, sf::Vector2f position) {
     bar.setPosition(position);
 
     _window.draw(bg);
-    _window.draw(bar);
+
+    if (ratio > 0)
+        _window.draw(bar);
+    else {
+        // Nếu HP <= 0, vẽ thanh HP màu đỏ
+        bar.setFillColor(sf::Color::Red);
+        _window.draw(bar);
+
+        // Vẽ chữ "DEAD" màu đỏ đè lên thanh máu
+        sf::Text deadText;
+        deadText.setFont(_font);  // Giả sử bạn đã load sẵn font vào biến _font
+        deadText.setString("DEAD");
+        deadText.setCharacterSize(10);
+        deadText.setFillColor(sf::Color::Red);
+
+        // Căn giữa chữ DEAD với thanh máu
+        sf::FloatRect textBounds = deadText.getLocalBounds();
+        deadText.setPosition(
+            position.x + (100 - textBounds.width) / 2,
+            position.y - 2 // hơi cao hơn để nhìn rõ
+        );
+
+        _window.draw(deadText);
+    }
 }
 
 void App::drawPauseMenu() {
@@ -350,12 +424,18 @@ void App::drawPauseMenu() {
     _window.draw(_exitText);
 }
 
+void App::drawGameOver() {
+    // Nền mờ khi GameOver
+    sf::RectangleShape overlay(sf::Vector2f(_window.getSize()));
+    overlay.setFillColor(sf::Color(0, 0, 0, 150));
+    _window.draw(overlay);
+
+    // Hiển thị Game Over
+    _window.draw(_gameOverSprite);
+}
+
 void App::run() {
     init();
-    _backgroundMainMenu.setTexture(_mainMenu);
-    float scaleX = 450.f / _mainMenu.getSize().x;
-    float scaleY = 300.f / _mainMenu.getSize().y;
-    _backgroundMainMenu.setScale(scaleX, scaleY);
 
     auto& level = _map.getMap(0);
 
@@ -373,8 +453,13 @@ void App::run() {
                 if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                     mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
 
-                    if (_playButton.getGlobalBounds().contains(mousePos)) {
+                    if (_1PlayerButton.getGlobalBounds().contains(mousePos)) {
                         _2Players = false; // Mặc định là chơi 1 người
+                        _isPlaying = true;
+                    }
+
+                    if (_2PlayersButton.getGlobalBounds().contains(mousePos)) {
+                        _2Players = true; // Chơi 2 người
                         _isPlaying = true;
                     }
 
@@ -436,8 +521,23 @@ void App::initGame() {
     if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
         std::cerr << "Missing Mario_Theme.ogg\n";
 
+    _hpPlayer1Text.setFont(_font);
+    _hpPlayer1Text.setString("Player 1");
+    _hpPlayer1Text.setCharacterSize(8);
+    _hpPlayer1Text.setFillColor(sf::Color::Black);
+    _hpPlayer1Text.setPosition(10, 15);
+
+    _hpPlayer2Text.setFont(_font);
+    _hpPlayer2Text.setString("Player 2");
+    _hpPlayer2Text.setCharacterSize(8);
+    _hpPlayer2Text.setFillColor(sf::Color::Black);
+    _hpPlayer2Text.setPosition(10, 30);
+
     _music.setLoop(true);
     _music.play();
+
+    _isWin = false;
+    _isLose = false;
 }
 
 void App::clearObjects() {

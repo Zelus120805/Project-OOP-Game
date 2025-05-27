@@ -75,7 +75,7 @@ void Enemy::setDX(float value) { dx = value; }
 void Enemy::setAlive(bool value) { life = value; }
 
 SlimeEnemy::SlimeEnemy() {
-    _damge = 20.f;
+    _damge = 30.f;
 }
 
 void SlimeEnemy::setEnemy(int x, int y) {
