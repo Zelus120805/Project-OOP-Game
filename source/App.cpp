@@ -143,40 +143,67 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     if (_isPaused)
         return;
 
-    // if (_player1->getRect().left > 200)
-    //     offsetX = _player1->getRect().left - 200;
+    if (_2Players) {
+        if (!_player1->finishPlayer() && !_player2->finishPlayer()) {
+            sf::FloatRect rect1 = _player1->getRect();
+            sf::FloatRect rect2 = _player2->getRect();
 
-    // if (_player1->getRect().top > 250)
-    //     offsetY = _player1->getRect().top - 250;
+            // Tính trung điểm
+            float centerX = (rect1.left + rect1.width / 2 + rect2.left + rect2.width / 2) / 2;
+            float centerY = (rect1.top + rect1.height / 2 + rect2.top + rect2.height / 2) / 2;
 
-    sf::FloatRect rect1 = _player1->getRect();
-    sf::FloatRect rect2 = _player2->getRect();
+            if (centerX > 200)
+                offsetX = centerX - 200;
+            if (centerY > 300)
+                offsetY = centerY - 300;
+        }
+        else if (!_player1->finishPlayer()) {
+            if (_player1->getRect().left > 200)
+                offsetX = _player1->getRect().left - 200;
 
-    // Tính trung điểm
-    float centerX = (rect1.left + rect1.width / 2 + rect2.left + rect2.width / 2) / 2;
-    float centerY = (rect1.top + rect1.height / 2 + rect2.top + rect2.height / 2) / 2;
+            if (_player1->getRect().top > 300)
+                offsetY = _player1->getRect().top - 300;
+        }
+        else if (!_player2->finishPlayer()) {
+            if (_player2->getRect().left > 300)
+                offsetX = _player2->getRect().left - 200;
 
-    if (centerX > 200)
-        offsetX = centerX - 200;
-    if (centerY > 300)
-        offsetY = centerY - 300;
+            if (_player2->getRect().top > 250)
+                offsetY = _player2->getRect().top - 250;
+        }
+        else {
+            _isPaused = true;
+        }
+    }
+    else {
+        if (!_player1->finishPlayer()) {
+            if (_player1->getRect().left > 200)
+                offsetX = _player1->getRect().left - 200;
 
+            if (_player1->getRect().top > 300)
+                offsetY = _player1->getRect().top - 300;
+        }
+        else {
+            _isPaused = true;
+        }
+    }
 
     playerCollisionWithEnemy();
     bulletCollisionWithEnemy();
 
-    // auto& currentMap = _map.getMap(0);
     _player1->controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
     _player1->update(time, currentMap, _window);
     _player1->updateWeapons(time, currentMap);
 
-    _player2->controlPlayer(sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Num2, sf::Keyboard::Num1);
-
-    _player2->update(time, currentMap, _window);
-    _player2->updateWeapons(time, currentMap);
+    if (_2Players) {
+        _player2->controlPlayer(sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Num2, sf::Keyboard::Num1);
+        _player2->update(time, currentMap, _window);
+        _player2->updateWeapons(time, currentMap);
+    }
 
     _enemy->updateEnemy(time, currentMap, *_player1);
-    _enemy->updateEnemy(time, currentMap, *_player2);
+    if (_2Players)
+        _enemy->updateEnemy(time, currentMap, *_player2);
 }
 
 void App::render() {
@@ -190,10 +217,12 @@ void App::render() {
         }
     }
 
-    for (const auto& b : _player2->getBullets()) {
-        if (b->isActive()) {
-            _player2->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
-            _window.draw(_player2->getBulletSprite());
+    if (_2Players) {
+        for (const auto& b : _player2->getBullets()) {
+            if (b->isActive()) {
+                _player2->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
+                _window.draw(_player2->getBulletSprite());
+            }
         }
     }
 
@@ -221,10 +250,13 @@ void App::render() {
     _window.draw(bar2);
 
     _window.draw(_player1->getPlayerSprite());
-    _window.draw(_player2->getPlayerSprite());
-    
     drawHPBar(*_player1, sf::Vector2f(20, 15));
-    drawHPBar(*_player2, sf::Vector2f(20, 30));
+
+    if (_2Players) {
+        _window.draw(_player2->getPlayerSprite());
+        drawHPBar(*_player2, sf::Vector2f(20, 30));
+    }
+
     _window.draw(_enemy->getSprite());
 
     // 2. Nếu đang pause thì vẽ menu
@@ -242,12 +274,13 @@ void App::playerCollisionWithEnemy() {
             _enemy->takeDamage(100.f);
         } else {
             if (!_player1->getIsHit()) {
-                _player1->setIsHit(true);
+                _player1->setIsHit(true, _enemy->getDamage());
                 _player1->getHitClock().restart();
-                _player1->setFlashCount(0);
             }
         }
     }
+
+    if (!_2Players) return; // Không kiểm tra va chạm nếu chỉ có 1 người chơi
 
     if (_player2->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
         if (_player2->getDY() > 0) {
@@ -256,9 +289,8 @@ void App::playerCollisionWithEnemy() {
             _enemy->takeDamage(100.f);
         } else {
             if (!_player2->getIsHit()) {
-                _player2->setIsHit(true);
+                _player2->setIsHit(true, _enemy->getDamage());
                 _player2->getHitClock().restart();
-                _player2->setFlashCount(0);
             }
         }
     }
@@ -273,6 +305,8 @@ void App::bulletCollisionWithEnemy() {
             _enemy->takeDamage(b->getDamage());
         }
     }
+
+    if (!_2Players) return; // Không kiểm tra va chạm nếu chỉ có 1 người chơi
 
     for (auto& b : _player2->getBullets()) {
         if (!b->isActive()) continue;
@@ -340,6 +374,7 @@ void App::run() {
                     mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
 
                     if (_playButton.getGlobalBounds().contains(mousePos)) {
+                        _2Players = false; // Mặc định là chơi 1 người
                         _isPlaying = true;
                     }
 
@@ -375,7 +410,8 @@ void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
     _player1 = new Contra();
-    _player2 = new Lugci();
+    if (_2Players)
+        _player2 = new Lugci();
     _enemy = new SlimeEnemy();
     offsetX = 0;
     offsetY = 0;
@@ -391,8 +427,9 @@ void App::initGame() {
     if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
         std::cerr << "Error loading Tiles.png\n";
 
-    _player1->setPlayer(110, 120);
-    _player2->setPlayer(120, 120);
+    _player1->setPlayer(90, 120);
+    if (_2Players)
+        _player2->setPlayer(120, 120);
 
     _enemy->setEnemy(800, 150);
 
