@@ -10,7 +10,7 @@ extern float offsetY;
 
 class Map {
 private:
-    const int _height = 22;
+    const int _height = 24;
     const int _width = 150;
     std::vector<std::vector<std::string>> maps;
     sf::Texture _backgroundTexture;

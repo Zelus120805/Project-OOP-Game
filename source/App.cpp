@@ -197,18 +197,18 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
 
             if (centerX > 200)
                 offsetX = centerX - 200;
-            if (centerY > 300)
-                offsetY = centerY - 300;
+            if (centerY > 250)
+                offsetY = centerY - 250;
         }
         else if (!_player1->finishPlayer()) {
             if (_player1->getRect().left > 200)
                 offsetX = _player1->getRect().left - 200;
 
-            if (_player1->getRect().top > 300)
-                offsetY = _player1->getRect().top - 300;
+            if (_player1->getRect().top > 250)
+                offsetY = _player1->getRect().top - 250;
         }
         else if (!_player2->finishPlayer()) {
-            if (_player2->getRect().left > 300)
+            if (_player2->getRect().left > 200)
                 offsetX = _player2->getRect().left - 200;
 
             if (_player2->getRect().top > 250)
@@ -223,8 +223,8 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
             if (_player1->getRect().left > 200)
                 offsetX = _player1->getRect().left - 200;
 
-            if (_player1->getRect().top > 300)
-                offsetY = _player1->getRect().top - 300;
+            if (_player1->getRect().top > 250)
+                offsetY = _player1->getRect().top - 250;
         }
         else {
             _isLose = true;

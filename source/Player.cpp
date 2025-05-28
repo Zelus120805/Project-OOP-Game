@@ -17,10 +17,12 @@ void Player::takeDamage() {
             _hp = (_hp - _damageEnemy < 0) ? 0 : _hp - _damageEnemy;
             if (_hp <= 0) {
                 _isDying = true;
+
                 if (_checkDown)
                     rect.top -= 18;
                 else if (_checkUp)
                     rect.top += 10;
+
                 _playerSet.setColor(sf::Color::Red);
                 return;
             }
@@ -118,11 +120,17 @@ void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::
 // --- Collision ---
 void Player::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
-        if (i < 0 || i >= (int)tileMap.size()) continue; // Check chỉ số i hợp lệ
-        for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
-            if (j < 0 || j >= (int)tileMap[i].size()) continue; // Check chỉ số j hợp lệ
-            if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
+        if (i < 0 || i >= (int)tileMap.size()) 
+            continue; // Check chỉ số i hợp lệ
 
+        for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
+            if (j < 0 || j >= (int)tileMap[i].size()) 
+                continue; // Check chỉ số j hợp lệ
+
+            if (tileMap[i][j] == 'z')
+                setIsHit(true, 100.f); 
+
+            if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                 if (dy > 0 && checkVertical) {
                     rect.top = i * 16 - rect.height;
                     dy = 0;
