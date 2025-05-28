@@ -66,8 +66,9 @@ void Enemy::takeDamage(float damage) {
         dx = 0;
     }
 }
-
-SlimeEnemy::SlimeEnemy() { }
+SlimeEnemy::SlimeEnemy() {
+    _damge = 30.f;
+}
 
 void SlimeEnemy::setEnemy(int x, int y) {
     if (!_enemyTexture.loadFromFile("Enemy/slime.png")) {

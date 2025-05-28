@@ -17,11 +17,15 @@ void Player::takeDamage() {
             _hp = (_hp - _damageEnemy < 0) ? 0 : _hp - _damageEnemy;
             if (_hp <= 0) {
                 _isDying = true;
+                if (_checkDown)
+                    rect.top -= 18;
+                else if (_checkUp)
+                    rect.top += 10;
                 _playerSet.setColor(sf::Color::Red);
                 return;
             }
                 
-            std::cout << "Player HP: " << _hp << std::endl;
+            // std::cout << "Player HP: " << _hp << std::endl;
         }
 
         if (hitClock.getElapsedTime().asMilliseconds() > 200) {
@@ -86,11 +90,11 @@ void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::
         _checkUp = false;
         _checkDown = false;
     }
-    if (sf::Keyboard::isKeyPressed(up)) {
+    if (sf::Keyboard::isKeyPressed(up) && onGround) {
         _checkUp = true;
         _checkDown = false;
     }
-    if (sf::Keyboard::isKeyPressed(down)) {
+    if (sf::Keyboard::isKeyPressed(down) && onGround) {
         _checkUp = false;
         _checkDown = true;
     }
@@ -349,13 +353,13 @@ void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
     } else if (pose == "down") {
         if (_checkRight) {
             spriteX = 34 * 8;
-            spriteY = 2 * 8 - 1;
+            spriteY = 2 * 8 - 2;
             width = 34;
             height = 17;
         }
         else {
             spriteX = 34 * 8 + 34;
-            spriteY = 2 * 8 - 1;
+            spriteY = 2 * 8 - 2;
             width = -34;
             height = 17;
         }
