@@ -250,8 +250,8 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
 }
 
 void App::render() {
-    _window.clear(sf::Color(107, 140, 255));
-    _map.render(_window, _tileSet);
+    _window.clear(sf::Color(107, 198, 255));
+    _map.render(_window, _tileSet, _lava);
 
     for (const auto& b : _player1->getBullets()) {
         if (b->isActive()) {
@@ -511,6 +511,9 @@ void App::initGame() {
 
     if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
         std::cerr << "Error loading Tiles.png\n";
+
+    if (!_lava.loadFromFile("Tiles/Assets/Lava.png"))
+        std::cerr << "Error loading Lava.png\n";
 
     _player1->setPlayer(90, 120);
     if (_2Players)
