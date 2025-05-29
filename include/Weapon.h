@@ -8,11 +8,42 @@
 #include <string>
 
 // class BulletDirection
-enum class BulletDirection {
+enum class WeaponDirection {
     Left,
     Right,
     Up
 };
+
+enum class TypeWeapon {
+    Gun,
+};
+
+inline float GetSpeedWeapon(TypeWeapon type) {
+    switch (type) {
+        case TypeWeapon::Gun:
+            return 0.18f;
+        default:
+            return 0.f;
+    }
+}
+
+inline float GetDamageSpeed(TypeWeapon type) {
+    switch (type) {
+        case TypeWeapon::Gun:
+            return 10.f;
+        default:
+            return 0.f;
+    }
+}
+
+inline float GetCoolDownWeapon(TypeWeapon type) {
+    switch (type) {
+        case TypeWeapon::Gun:
+            return 500.f;
+        default:
+            return 0.f;
+    }
+}
 
 class Player;
 
@@ -23,10 +54,10 @@ protected:
     sf::FloatRect _rect;
     
     bool _active;
-
     float _damage;
+    float _speed;
 
-    BulletDirection _direction;
+    WeaponDirection _direction;
 
     sf::Clock _shootCooldown;
 public:
@@ -48,15 +79,13 @@ public:
 };
 
 class Gun : public Weapon {
-private:
-    float _speed;
 public:
     Gun();
     ~Gun() override { }
 
     void attack(Player& player) override;
     void update(float time, const std::vector<std::string>& currentMap) override;
-    void Shoot(float x, float y, BulletDirection dir);
+    void Shoot(float x, float y, WeaponDirection dir);
 };
 
 #endif // _WEAPON_H_

@@ -9,6 +9,33 @@
 #include "Map.h"
 #include "Weapon.h"
 
+enum class PlayerType {
+    Contra,
+    Lugci,
+};
+
+enum class PlayerPose {
+    RunLeft,
+    RunRight,
+    Up,
+    Down,
+    Stand,
+};
+
+enum class Direction {
+    Left,
+    Right,
+};
+
+enum class PlayerAction {
+    Left,
+    Right,
+    Up,
+    Down,
+    Jump,
+    Fire
+};
+
 class Weapon;
 
 class Player {
@@ -28,13 +55,9 @@ protected:
 
     sf::Sprite _playerSet;
 
-    Weapon* _weapon = nullptr;
-
     // Direction
-    bool _checkLeft;
-    bool _checkRight;
-    bool _checkUp;
-    bool _checkDown;
+    Direction _dir;
+    PlayerPose _pose;
 
     sf::Sprite _bulletSet;
 
@@ -52,6 +75,7 @@ protected:
     bool _isDeadCompletely;
 
     // Quản lí Weapon
+    Weapon* _weapon = nullptr;
     std::map<std::string, std::unique_ptr<Weapon>> _skills;
     std::vector<std::unique_ptr<Weapon>> _weapons;
 protected:
@@ -60,7 +84,7 @@ public:
     virtual ~Player();
     virtual void setPlayer(float x, float y) = 0;
     virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
-    virtual void setSpriteByPose(const std::string& pose, float currentFrame) = 0;
+    virtual void setSpriteByPose(PlayerPose pose, float currentFrame) = 0;
     void takeDamage();
 public:
     sf::FloatRect getRect() const;
@@ -74,16 +98,14 @@ public:
     float getHP() const;
     float getHPPlayer() const;
     bool finishPlayer() const;
-
-    bool checkLeft() { return _checkLeft; }
-    bool checkRight() { return _checkRight; }
-    bool checkUp() { return _checkUp; }
-    bool checkDown() { return _checkDown; }
+    
+    Direction getDirection() const;
+    PlayerPose getPose() const;
 
     Weapon& getBullet() { return *_weapon; }
     std::vector<std::unique_ptr<Weapon>>& getBullets() { return _weapons; }
 public:
-    void controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key fire);
+    void controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap);
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
     void addBullet(std::unique_ptr<Weapon> bullet);
     void attack(Weapon* weapon);
@@ -100,7 +122,7 @@ public:
 public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
-    void setSpriteByPose(const std::string& pose, float currentFrame) override;
+    void setSpriteByPose(PlayerPose pose, float currentFrame) override;
 public:
     // void testisAttacked() {
     //     if (isHit) {
@@ -119,7 +141,7 @@ public:
 public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
-    void setSpriteByPose(const std::string& pose, float currentFrame) override;
+    void setSpriteByPose(PlayerPose pose, float currentFrame) override;
 public:
     // void testisAttacked() {
     //     if (isHit) {
