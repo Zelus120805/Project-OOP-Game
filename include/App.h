@@ -6,10 +6,13 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 #include "Player.h"
 #include "Enemy.h"
 #include "Map.h"
 #include "Error.h"
+#include "Random.h"
+#include "InputConfig.h"
 
 enum class GameState {
     MenuMain,
@@ -17,6 +20,7 @@ enum class GameState {
     Options,
     Paused,
     Won,
+    NextLevel,
     Lost,
     Restarting,
     Exiting,
@@ -42,16 +46,20 @@ private:
     sf::RectangleShape _pauseButton;
     sf::RectangleShape _continueBg, _restartBg, _exitBg;
     sf::RectangleShape _restartLose, _exitLose;
+    sf::RectangleShape _nextLevelWin, _restartWin, _exitWin;
     sf::RectangleShape _1PlayerButton;
     sf::RectangleShape _2PlayersButton;
     sf::RectangleShape _optionsButton;
     sf::RectangleShape _exitButton;
     sf::Texture _mainMenu;
     sf::Texture _gameOverTexture;
+    sf::Texture _gameWonTexture;
     sf::Sprite _backgroundMainMenu;
     sf::Sprite _gameOverSprite;
+    sf::Sprite _gameWonSprite;
     sf::Text _continueText, _restartText, _exitText;
     sf::Text _timerText;
+    sf::Text _optionText;
     sf::Text _hpPlayer1Text;
     sf::Text _hpPlayer2Text;
     sf::Clock _gameClock;
@@ -69,6 +77,7 @@ private:
 
     void preparePauseButton();
     void prepareGameOver();
+    void prepareGameWon();
 
     void init();
     void handleEvents();
@@ -81,7 +90,9 @@ private:
     void drawHPBar(const Player& player, sf::Vector2f position);
     void drawPauseMenu();
     void drawGameOver();
+    void drawGameWon();
     void drawUIGame();
+    void menuOptions();
 public:
     App();
     virtual ~App();
@@ -89,6 +100,8 @@ public:
     sf::Vector2f calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2);
     void updateCameraOffset(const sf::FloatRect& rect);
     void renderBullets(Player* player);
+    void spoilPlayer();
+    void spoilEnemy();
 
     void run();
     void clearObjects();

@@ -6,6 +6,10 @@ App::App() : _window(sf::VideoMode(450, 300), "Game"), _player1(), _player2() {
 
 App::~App() {
     clearObjects();
+    for (auto e : _enemy) {
+        delete e;
+    }
+    _enemy.clear();
 }
 
 void App::preparePauseButton() {
@@ -55,8 +59,14 @@ void App::preparePauseButton() {
 }
 
 void App::prepareGameOver() {
-    if (!ResourceLoader::loadTexture(_gameOverTexture, "Tiles/Assets/GameOver.png"))
+    try {
+        if (!_gameOverTexture.loadFromFile("Tiles/Assets/GameOver.png")) {
+            throw MyException(111, "Không thể tải GameOver texture");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
         exit(1);
+    }
 
     _gameOverSprite.setTexture(_gameOverTexture);
     float scaleX = 350.f / _gameOverTexture.getSize().x;
@@ -74,6 +84,36 @@ void App::prepareGameOver() {
     _exitLose.setPosition(150, 210);
 }
 
+void App::prepareGameWon() {
+    try {
+        if (!_gameWonTexture.loadFromFile("Tiles/Assets/YouWin.png")) {
+            throw MyException(111, "Không thể tải YouWin texture");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
+    }
+
+    _gameWonSprite.setTexture(_gameWonTexture);
+    float scaleX = 350.f / _gameWonTexture.getSize().x;
+    float scaleY = 200.f / _gameWonTexture.getSize().y;
+    _gameWonSprite.setScale(scaleX, scaleY);
+    _gameWonSprite.setPosition(_window.getSize().x / 2.f - _gameWonSprite.getGlobalBounds().width / 2.f,
+                        _window.getSize().y / 2.f - _gameWonSprite.getGlobalBounds().height / 2.f - 10);
+
+    // Next level background
+    _nextLevelWin.setSize(sf::Vector2f(216, 20));
+    _nextLevelWin.setPosition(117, 148);
+
+    // Restart background
+    _restartWin.setSize(sf::Vector2f(216, 20));
+    _restartWin.setPosition(117, 178);
+
+    // Exit background
+    _exitWin.setSize(sf::Vector2f(160, 17));
+    _exitWin.setPosition(144, 206);
+}
+
 void App::init() {
     _player1 = nullptr;
     _player2 = nullptr;
@@ -81,14 +121,41 @@ void App::init() {
 
     _gameState = GameState::MenuMain;
 
-    if (!ResourceLoader::loadFont(_font, "Font/04B_30__.ttf"))
+    try {
+        if (!_font.loadFromFile("Font/04B_30__.ttf")) {
+            throw MyException(112, "Không thể tải font 04B_30__.ttf");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
         exit(1);
+    }
 
-    if (!ResourceLoader::loadFont(_fontTime,"Font/CHICKEN Pie.ttf"))
+    try {
+        if (!_fontTime.loadFromFile("Font/CHICKEN Pie.ttf")) {
+            throw MyException(113, "Không thể tải font CHICKEN Pie.ttf");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
         exit(1);
+    }
 
-    if (!ResourceLoader::loadTexture(_mainMenu,"Tiles/Assets/BackgroundMainMenu.png"))
+    try {
+        if (!_mainMenu.loadFromFile("Tiles/Assets/BackgroundMainMenu.png")) {
+            throw MyException(113, "Không thể tải background main menu texture");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
         exit(1);
+    }
+
+    try {
+        if (!InputConfig::loadControls("Player/Controls.txt", _player1Keys, _player2Keys)) {
+            throw MyException(123, "Không thể mở file Controls.txt để tải cấu hình điều khiển");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
+    }
     
     _backgroundMainMenu.setTexture(_mainMenu);
     float scaleX = 450.f / _mainMenu.getSize().x;
@@ -114,8 +181,18 @@ void App::init() {
     _timerText.setFillColor(sf::Color::Red);
     _timerText.setPosition(_window.getSize().x / 2.f - 25, 10);
 
+    // Option text
+    _optionText.setFont(_font);  // Đảm bảo _font đã được load thành công
+    _optionText.setString("OPTION");
+    _optionText.setCharacterSize(30);  // Tăng kích thước lên cho dễ thấy
+    _optionText.setFillColor(sf::Color::Red);
+    _optionText.setStyle(sf::Text::Bold);  // Thêm in đậm
+    _optionText.setPosition((_window.getSize().x - _optionText.getLocalBounds().width) / 2.f, 15);
+
     preparePauseButton();
     prepareGameOver();
+    prepareGameWon();
+    InputConfig::initialize();
 }
 
 sf::Vector2f App::calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2) {
@@ -127,8 +204,8 @@ sf::Vector2f App::calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect
 void App::updateCameraOffset(const sf::FloatRect& rect) {
     if (rect.left > 200) 
         offsetX = rect.left - 200;
-    if (rect.top > 270) 
-        offsetY = rect.top - 270;
+    if (rect.top > 260) 
+        offsetY = rect.top - 260;
 }
 
 void App::renderBullets(Player* player) {
@@ -214,12 +291,26 @@ void App::handleEvents() {
                     _gameState = GameState::Exiting;
                 }
             }
+
+            if (_gameState == GameState::Won) {
+                if (_nextLevelWin.getGlobalBounds().contains(mousePos)) {
+                    _gameState = GameState::NextLevel;
+                }
+
+                if (_restartWin.getGlobalBounds().contains(mousePos)) {
+                    _gameState = GameState::Restarting;
+                }
+
+                if (_exitWin.getGlobalBounds().contains(mousePos)) {
+                    _gameState = GameState::Exiting;
+                }
+            }
         }
     }
 }
 
 void App::update(float time, const std::vector<std::string>& currentMap) {
-    if (_gameState == GameState::Paused || _gameState == GameState::Lost) 
+    if (_gameState == GameState::Paused || _gameState == GameState::Lost || _gameState == GameState::Won)
         return;
 
     if (_2Players) {
@@ -227,8 +318,8 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
             auto center = calculateMidpoint(_player1->getRect(), _player2->getRect());
             if (center.x > 200) 
                 offsetX = center.x - 200;
-            if (center.y > 270) 
-                offsetY = center.y - 270;
+            if (center.y > 260) 
+                offsetY = center.y - 260;
         } else if (!_player1->finishPlayer()) {
             updateCameraOffset(_player1->getRect());
         } else if (!_player2->finishPlayer()) {
@@ -290,11 +381,17 @@ void App::render() {
 
     if (_gameState == GameState::Paused) 
         drawPauseMenu();
+
     if (_gameState == GameState::Lost) 
         drawGameOver();
 
-    if (isWinGame()) {
-        _gameState = GameState::Paused;
+    if (_gameState == GameState::Won)
+        drawGameWon();
+    else {
+        if (isWinGame()) {
+            
+            _gameState = GameState::Won;
+        }
     }
 
     _window.display();
@@ -303,7 +400,7 @@ void App::render() {
 bool App::isWinGame() const {
     // Kiểm tra nếu tất cả kẻ địch đều đã chết
     for (const auto& e : _enemy) {
-        if (e->isAlive()) 
+        if (e->isAlive() || !e->isCompleteDie()) 
             return false;
     }
     return true;
@@ -356,7 +453,8 @@ void App::bulletCollisionWithEnemy() {
         }
     }
 
-    if (!_2Players) return; // Không kiểm tra va chạm nếu chỉ có 1 người chơi
+    if (!_2Players) 
+        return; // Không kiểm tra va chạm nếu chỉ có 1 người chơi
 
     for (auto& b : _player2->getBullets()) {
         if (!b->isActive()) continue;
@@ -435,6 +533,16 @@ void App::drawGameOver() {
     _window.draw(_gameOverSprite);
 }
 
+void App::drawGameWon() {
+    // Nền mờ khi GameWon
+    sf::RectangleShape overlay(sf::Vector2f(_window.getSize()));
+    overlay.setFillColor(sf::Color(0, 0, 0, 150));
+    _window.draw(overlay);
+
+    // Hiển thị You Win
+    _window.draw(_gameWonSprite);
+}
+
 void App::run() {
     init();
 
@@ -465,7 +573,7 @@ void App::run() {
                     }
 
                     if (_optionsButton.getGlobalBounds().contains(mousePos)) {
-                        std::cout << "Options\n";
+                        _gameState = GameState::Options;
                     }
 
                     if (_exitButton.getGlobalBounds().contains(mousePos)) {
@@ -479,15 +587,17 @@ void App::run() {
             _window.display();
         }
         
-        if (_gameState == GameState::Playing) {
+        if (_gameState == GameState::Playing || _gameState == GameState::Restarting || _gameState == GameState::NextLevel) {
             runGame(level);
-            if (_gameState == GameState::Restarting) {
-                _gameState = GameState::Playing;
-            }
 
             if (_gameState == GameState::Exiting) {
                 _gameState = GameState::MenuMain;
             }
+        }
+
+        if (_gameState == GameState::Options) {
+            menuOptions();
+            _gameState = GameState::MenuMain; // Quay lại menu chính sau khi chọn xong
         }
     }
 }
@@ -495,26 +605,33 @@ void App::run() {
 void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
-    _player1 = new Contra();
-    _player1Keys[PlayerAction::Left]  = sf::Keyboard::A;
-    _player1Keys[PlayerAction::Right] = sf::Keyboard::D;
-    _player1Keys[PlayerAction::Down]  = sf::Keyboard::S;
-    _player1Keys[PlayerAction::Up]    = sf::Keyboard::W;
-    _player1Keys[PlayerAction::Fire]  = sf::Keyboard::J;
-    _player1Keys[PlayerAction::Jump]  = sf::Keyboard::K;
+    // _player1Keys[PlayerAction::Left]  = sf::Keyboard::A;
+    // _player1Keys[PlayerAction::Right] = sf::Keyboard::D;
+    // _player1Keys[PlayerAction::Down]  = sf::Keyboard::S;
+    // _player1Keys[PlayerAction::Up]    = sf::Keyboard::W;
+    // _player1Keys[PlayerAction::Fire]  = sf::Keyboard::J;
+    // _player1Keys[PlayerAction::Jump]  = sf::Keyboard::K;
 
+    // _player2Keys[PlayerAction::Left]  = sf::Keyboard::Left;
+    // _player2Keys[PlayerAction::Right] = sf::Keyboard::Right;
+    // _player2Keys[PlayerAction::Down]  = sf::Keyboard::Down;
+    // _player2Keys[PlayerAction::Up]    = sf::Keyboard::Up;
+    // _player2Keys[PlayerAction::Fire]  = sf::Keyboard::Num2;
+    // _player2Keys[PlayerAction::Jump]  = sf::Keyboard::Num1;
+
+    // try {
+    //     if (!InputConfig::loadControls("Player/Controls.txt", _player1Keys, _player2Keys)) {
+    //         throw MyException(123, "Không thể mở file Controls.txt để tải cấu hình điều khiển");
+    //     }
+    // } catch (const MyException& e) {
+    //     std::cout << e.what() << '\n';
+    //     exit(1);
+    // }
+
+    _player1 = new Contra();
     if (_2Players) {
         _player2 = new Lugci();
-        _player2Keys[PlayerAction::Left]  = sf::Keyboard::Left;
-        _player2Keys[PlayerAction::Right] = sf::Keyboard::Right;
-        _player2Keys[PlayerAction::Down]  = sf::Keyboard::Down;
-        _player2Keys[PlayerAction::Up]    = sf::Keyboard::Up;
-        _player2Keys[PlayerAction::Fire]  = sf::Keyboard::Num2;
-        _player2Keys[PlayerAction::Jump]  = sf::Keyboard::Num1;
     }
-    _enemy.push_back(new SlimeEnemy());
-    _enemy.push_back(new SlimeEnemy());
-
     
     offsetX = 0;
     offsetY = 0;
@@ -523,39 +640,80 @@ void App::initGame() {
     _gameClock.restart();
     _pausedTime = sf::Time::Zero;
 
-    if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
-        std::cerr << "Failed to load background\n";
+    try {
+        if (!_map.loadBackground("Tiles/Assets/Background_2.png")) {
+            throw MyException(114, "Không thể tải background map");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
-    if (!ResourceLoader::loadTexture(_tileSet, "Tiles/Assets/Assets.png"))
+    try {
+        if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png")) {
+            throw MyException(115, "Không thể tải Assets.png");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
         exit(1);
+    }
 
+    try {
+        if (!_music.openFromFile("Sound/Mario_Theme.ogg")) {
+            throw MyException(115, "Không thể tải nhạc nền Mario_Theme.ogg");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
+    }
+
+    spoilPlayer();
+    spoilEnemy();
+    _gameState = GameState::Playing;
+
+    _music.setLoop(true);
+    _music.play();
+}
+
+void App::spoilPlayer() {
     _player1->setPlayer(90, 120);
-    if (_2Players)
-        _player2->setPlayer(120, 120);
-
-    // for (auto e : _enemy)
-    //     e->setEnemy(800, 150);
-    _enemy[0]->setEnemy(800, 150);
-    _enemy[1]->setEnemy(700, 150);
-
-    if (!ResourceLoader::loadSound(_music, "Sound/Mario_Theme.ogg"))
-        exit(1);
-
     _hpPlayer1Text.setFont(_font);
     _hpPlayer1Text.setString("Player 1");
     _hpPlayer1Text.setCharacterSize(8);
     _hpPlayer1Text.setFillColor(sf::Color::Black);
     _hpPlayer1Text.setPosition(10, 15);
 
-    _hpPlayer2Text.setFont(_font);
-    _hpPlayer2Text.setString("Player 2");
-    _hpPlayer2Text.setCharacterSize(8);
-    _hpPlayer2Text.setFillColor(sf::Color::Black);
-    _hpPlayer2Text.setPosition(10, 30);
+    if (_2Players) {
+        _player2->setPlayer(120, 120);
+        _hpPlayer2Text.setFont(_font);
+        _hpPlayer2Text.setString("Player 2");
+        _hpPlayer2Text.setCharacterSize(8);
+        _hpPlayer2Text.setFillColor(sf::Color::Black);
+        _hpPlayer2Text.setPosition(10, 30);
+    }
+}
 
-    _music.setLoop(true);
-    _music.play();
+void App::spoilEnemy() {
+    if (_gameState == GameState::NextLevel || _gameState == GameState::Playing) {
+        for (auto e : _enemy) {
+            delete e;  // Xoá các đối tượng cũ
+        }
+        _enemy.clear();
+
+        // Tạo ngẫu nhiên số lượng kẻ địch
+        int countEnemy = Random::getRandomInt(15, 25);
+        for (int i = 0; i < countEnemy; ++i) {
+            _enemy.push_back(new SlimeEnemy(Random::getRandomInt(200, 2200), 150));
+        }
+    }
+    else if (_gameState == GameState::Restarting) {
+        for (int i = 0; i < _enemy.size(); ++i) {
+            int posX = _enemy[i]->getXPos();
+            int posY = _enemy[i]->getYPos();
+            delete _enemy[i];  // Xoá đối tượng cũ
+            _enemy[i] = new SlimeEnemy(posX, posY);
+        }
+    }
 }
 
 void App::clearObjects() {
@@ -564,11 +722,6 @@ void App::clearObjects() {
         delete _player1;
     if (_player2)
         delete _player2;
-
-    for (auto e : _enemy) {
-        delete e;
-    }
-    _enemy.clear();
         
     _player1 = nullptr;
     _player2 = nullptr;
@@ -582,9 +735,105 @@ void App::runGame(const std::vector<std::string>& level) {
             time = 20;
 
         handleEvents();
-        if (_gameState == GameState::Restarting || _gameState == GameState::Exiting)
+        if (_gameState == GameState::Restarting || _gameState == GameState::Exiting || _gameState == GameState::NextLevel)
            return;
         update(time, level);
         render();
+    }
+}
+
+void App::menuOptions() {
+    const std::vector<std::string> actionNames = {
+        "Left", "Right", "Down", "Up", "Shoot", "Jump"
+    };
+
+    struct ControlItem {
+        sf::Text text;
+        PlayerAction action;
+        bool isPlayer1;
+        sf::FloatRect getBounds() const {
+            return text.getGlobalBounds();
+        }
+    };
+
+    std::vector<ControlItem> items;
+    for (int i = 0; i < 6; ++i) {
+        ControlItem p1;
+        p1.text = sf::Text(actionNames[i] + " = " + InputConfig::keyToString(_player1Keys[(PlayerAction)i]), _font, 12);
+        p1.text.setPosition(60, 100 + i * 30);
+        p1.action = static_cast<PlayerAction>(i);
+        p1.isPlayer1 = true;
+        items.push_back(p1);
+
+        ControlItem p2;
+        p2.text = sf::Text(actionNames[i] + " = " + InputConfig::keyToString(_player2Keys[(PlayerAction)i]), _font, 12);
+        p2.text.setPosition(270, 100 + i * 30);
+        p2.action = static_cast<PlayerAction>(i);
+        p2.isPlayer1 = false;
+        items.push_back(p2);
+    }
+
+    // --- Thêm tiêu đề Player 1 và Player 2 ---
+    sf::Text player1Title("Player 1", _font, 20);
+    player1Title.setFillColor(sf::Color::Black);
+    player1Title.setPosition(60, 60);
+
+    sf::Text player2Title("Player 2", _font, 20);
+    player2Title.setFillColor(sf::Color::Black);
+    player2Title.setPosition(270, 60);
+
+    int selectedIndex = -1;
+
+    while (_window.isOpen()) {
+        _window.clear(sf::Color(107, 140, 255));
+
+        sf::Event event;
+        while (_window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                _window.close();
+
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                sf::Vector2f mouseWorld = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
+                for (int i = 0; i < (int)items.size(); ++i) {
+                    if (items[i].getBounds().contains(mouseWorld)) {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (event.type == sf::Event::KeyPressed && selectedIndex != -1) {
+                auto& item = items[selectedIndex];
+                if (item.isPlayer1)
+                    _player1Keys[item.action] = event.key.code;
+                else
+                    _player2Keys[item.action] = event.key.code;
+
+                // Cập nhật lại nội dung hiển thị
+                item.text.setString(actionNames[(int)item.action] + " = " + InputConfig::keyToString(event.key.code));
+                selectedIndex = -1;
+            }
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                InputConfig::saveControls("Player/Controls.txt", _player1Keys, _player2Keys);
+                return;
+            }
+        }
+
+        // Tô màu các dòng
+        sf::Vector2f mouseWorld = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
+        for (int i = 0; i < (int)items.size(); ++i) {
+            if (items[i].getBounds().contains(mouseWorld))
+                items[i].text.setFillColor(sf::Color::Yellow);
+            else
+                items[i].text.setFillColor(sf::Color::White);
+            _window.draw(items[i].text);
+        }
+
+        // Vẽ tiêu đề
+        _window.draw(player1Title);
+        _window.draw(player2Title);
+        _window.draw(_optionText);
+        _window.display();
     }
 }

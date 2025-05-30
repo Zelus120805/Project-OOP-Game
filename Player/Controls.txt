@@ -1,0 +1,2 @@
+Player1: A D S W J K
+Player2: Left Right Down Up Numpad1 Numpad2
