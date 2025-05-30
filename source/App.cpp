@@ -55,10 +55,8 @@ void App::preparePauseButton() {
 }
 
 void App::prepareGameOver() {
-    if (!_gameOverTexture.loadFromFile("Tiles/Assets/GameOver.png")) {
-        std::cout << "Không thể tải file GameOver.\n";
+    if (!ResourceLoader::loadTexture(_gameOverTexture, "Tiles/Assets/GameOver.png"))
         exit(1);
-    }
 
     _gameOverSprite.setTexture(_gameOverTexture);
     float scaleX = 350.f / _gameOverTexture.getSize().x;
@@ -79,27 +77,19 @@ void App::prepareGameOver() {
 void App::init() {
     _player1 = nullptr;
     _player2 = nullptr;
-    _enemy = nullptr;
+    _enemy.clear();
 
-    _isPlaying = false;
-    _isPaused = false;
-    _isRestart = false;
-    _isExit = false;
+    _gameState = GameState::MenuMain;
 
-    if (!_font.loadFromFile("Font/04B_30__.ttf")) {
-        std::cout << "Không thể tải font.\n";
+    if (!ResourceLoader::loadFont(_font, "Font/04B_30__.ttf"))
         exit(1);
-    }
 
-    if (!_fontTime.loadFromFile("Font/CHICKEN Pie.ttf")) {
-        std::cout << "Không thể tải font.\n";
+    if (!ResourceLoader::loadFont(_fontTime,"Font/CHICKEN Pie.ttf"))
         exit(1);
-    }
 
-    if (!_mainMenu.loadFromFile("Tiles/Assets/BackgroundMainMenu.png")) {
-        std::cout << "Không thể tải file.\n";
+    if (!ResourceLoader::loadTexture(_mainMenu,"Tiles/Assets/BackgroundMainMenu.png"))
         exit(1);
-    }
+    
     _backgroundMainMenu.setTexture(_mainMenu);
     float scaleX = 450.f / _mainMenu.getSize().x;
     float scaleY = 300.f / _mainMenu.getSize().y;
@@ -128,6 +118,54 @@ void App::init() {
     prepareGameOver();
 }
 
+sf::Vector2f App::calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2) {
+    float cx = (r1.left + r1.width / 2 + r2.left + r2.width / 2) / 2;
+    float cy = (r1.top + r1.height / 2 + r2.top + r2.height / 2) / 2;
+    return {cx, cy};
+}
+
+void App::updateCameraOffset(const sf::FloatRect& rect) {
+    if (rect.left > 200) 
+        offsetX = rect.left - 200;
+    if (rect.top > 270) 
+        offsetY = rect.top - 270;
+}
+
+void App::renderBullets(Player* player) {
+    for (const auto& b : player->getBullets()) {
+        if (b->isActive()) {
+            auto& sprite = player->getBulletSprite();
+            sprite.setPosition(b->getPosition());
+            _window.draw(sprite);
+        }
+    }
+}
+
+void App::drawUIGame() {
+    // 1. Nút pause hình "="
+    sf::RectangleShape bar1(sf::Vector2f(4, 20));
+    sf::RectangleShape bar2(sf::Vector2f(4, 20));
+    bar1.setPosition(_pauseButton.getPosition().x + 6, _pauseButton.getPosition().y + 5);
+    bar2.setPosition(_pauseButton.getPosition().x + 18, _pauseButton.getPosition().y + 5);
+    bar1.setFillColor(sf::Color::Black);
+    bar2.setFillColor(sf::Color::Black);
+
+    if (_gameState == GameState::Playing) {
+        _gameTime = _gameClock.getElapsedTime() + _pausedTime;
+    }
+    std::stringstream ss;
+    ss << "Time: " << std::fixed << std::setprecision(1) << _gameTime.asSeconds() << " s";
+    _timerText.setString(ss.str());
+
+    // Vẽ các đối tượng
+    _window.draw(_pauseButton);
+
+    _window.draw(_timerText);
+
+    _window.draw(bar1);
+    _window.draw(bar2);
+}
+
 void App::handleEvents() {
     sf::Event event;
     while (_window.pollEvent(event)) {
@@ -144,38 +182,36 @@ void App::handleEvents() {
             mousePos = _window.mapPixelToCoords(sf::Mouse::getPosition(_window));
 
             // Nhấn nút Pause
-            if (!_isPaused) {
+            if (_gameState == GameState::Playing) {
                 if (_pauseButton.getGlobalBounds().contains(mousePos)) {
-                    _isPaused = true;
+                    _gameState = GameState::Paused;
                     _pausedTime = _gameTime;
                 }
             }
 
             // Nếu đang Pause, kiểm tra các nút menu
-            if (_isPaused) {
+            if (_gameState == GameState::Paused) {
                 if (_continueBg.getGlobalBounds().contains(mousePos)) {
-                    _isPaused = false;
+                    _gameState = GameState::Playing;
                     _gameClock.restart();
                 }
 
                 if (_restartBg.getGlobalBounds().contains(mousePos)) {
-                    _isPaused = false;
-                    _isRestart = true;
+                    _gameState = GameState::Restarting;
                 }
 
                 if (_exitBg.getGlobalBounds().contains(mousePos)) {
-                    _isPaused = false;
-                    _isExit = true;
+                    _gameState = GameState::Exiting;
                 }
             }
 
-            if (_isLose) {
+            if (_gameState == GameState::Lost) {
                 if (_restartLose.getGlobalBounds().contains(mousePos)) {
-                    _isRestart = true;
+                    _gameState = GameState::Restarting;
                 }
 
                 if (_exitLose.getGlobalBounds().contains(mousePos)) {
-                    _isExit = true;
+                    _gameState = GameState::Exiting;
                 }
             }
         }
@@ -183,165 +219,126 @@ void App::handleEvents() {
 }
 
 void App::update(float time, const std::vector<std::string>& currentMap) {
-    if (_isPaused || _isLose)
+    if (_gameState == GameState::Paused || _gameState == GameState::Lost) 
         return;
 
     if (_2Players) {
         if (!_player1->finishPlayer() && !_player2->finishPlayer()) {
-            sf::FloatRect rect1 = _player1->getRect();
-            sf::FloatRect rect2 = _player2->getRect();
-
-            // Tính trung điểm
-            float centerX = (rect1.left + rect1.width / 2 + rect2.left + rect2.width / 2) / 2;
-            float centerY = (rect1.top + rect1.height / 2 + rect2.top + rect2.height / 2) / 2;
-
-            if (centerX > 200)
-                offsetX = centerX - 200;
-            if (centerY > 250)
-                offsetY = centerY - 250;
+            auto center = calculateMidpoint(_player1->getRect(), _player2->getRect());
+            if (center.x > 200) 
+                offsetX = center.x - 200;
+            if (center.y > 270) 
+                offsetY = center.y - 270;
+        } else if (!_player1->finishPlayer()) {
+            updateCameraOffset(_player1->getRect());
+        } else if (!_player2->finishPlayer()) {
+            updateCameraOffset(_player2->getRect());
+        } else {
+            _gameState = GameState::Lost;
         }
-        else if (!_player1->finishPlayer()) {
-            if (_player1->getRect().left > 200)
-                offsetX = _player1->getRect().left - 200;
-
-            if (_player1->getRect().top > 250)
-                offsetY = _player1->getRect().top - 250;
-        }
-        else if (!_player2->finishPlayer()) {
-            if (_player2->getRect().left > 200)
-                offsetX = _player2->getRect().left - 200;
-
-            if (_player2->getRect().top > 250)
-                offsetY = _player2->getRect().top - 250;
-        }
-        else {
-            _isLose = true;
-        }
-    }
-    else {
+    } else {
         if (!_player1->finishPlayer()) {
-            if (_player1->getRect().left > 200)
-                offsetX = _player1->getRect().left - 200;
-
-            if (_player1->getRect().top > 250)
-                offsetY = _player1->getRect().top - 250;
-        }
-        else {
-            _isLose = true;
+            updateCameraOffset(_player1->getRect());
+        } else {
+            _gameState = GameState::Lost;
         }
     }
 
     playerCollisionWithEnemy();
     bulletCollisionWithEnemy();
 
-    _player1->controlPlayer(sf::Keyboard::A, sf::Keyboard::D, sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::K, sf::Keyboard::J);
+    _player1->controlPlayer(_player1Keys);
     _player1->update(time, currentMap, _window);
     _player1->updateWeapons(time, currentMap);
 
     if (_2Players) {
-        _player2->controlPlayer(sf::Keyboard::Left, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Num2, sf::Keyboard::Num1);
+        _player2->controlPlayer(_player2Keys);
         _player2->update(time, currentMap, _window);
         _player2->updateWeapons(time, currentMap);
     }
 
-    _enemy->updateEnemy(time, currentMap, *_player1);
-    if (_2Players)
-        _enemy->updateEnemy(time, currentMap, *_player2);
+    for (auto e : _enemy) {
+        e->updateEnemy(time, currentMap, *_player1);
+        if (_2Players) 
+            e->updateEnemy(time, currentMap, *_player2);
+    }
 }
 
 void App::render() {
     _window.clear(sf::Color(107, 198, 255));
     _map.render(_window, _tileSet, _lava);
 
-    for (const auto& b : _player1->getBullets()) {
-        if (b->isActive()) {
-            _player1->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
-            _window.draw(_player1->getBulletSprite());
-        }
-    }
+    renderBullets(_player1);
+    if (_2Players) 
+        renderBullets(_player2);
 
-    if (_2Players) {
-        for (const auto& b : _player2->getBullets()) {
-            if (b->isActive()) {
-                _player2->getBulletSprite().setPosition(b->getPosition().x, b->getPosition().y);
-                _window.draw(_player2->getBulletSprite());
-            }
-        }
-    }
-
-    // 1. Nút pause hình "="
-    sf::RectangleShape bar1(sf::Vector2f(4, 20));
-    sf::RectangleShape bar2(sf::Vector2f(4, 20));
-    bar1.setPosition(_pauseButton.getPosition().x + 6, _pauseButton.getPosition().y + 5);
-    bar2.setPosition(_pauseButton.getPosition().x + 18, _pauseButton.getPosition().y + 5);
-    bar1.setFillColor(sf::Color::Black);
-    bar2.setFillColor(sf::Color::Black);
-
-    if (!_isPaused && !_isLose) {
-        _gameTime = _gameClock.getElapsedTime() + _pausedTime;
-    }
-    std::stringstream ss;
-    ss << "Time: " << std::fixed << std::setprecision(1) << _gameTime.asSeconds() << " s";
-    _timerText.setString(ss.str());
-
-    // Vẽ các đối tượng
-    _window.draw(_pauseButton);
-
-    _window.draw(_timerText);
-
-    _window.draw(bar1);
-    _window.draw(bar2);
+    drawUIGame();
 
     _window.draw(_player1->getPlayerSprite());
     _window.draw(_hpPlayer1Text);
-    drawHPBar(*_player1, sf::Vector2f(70, 15));
+    drawHPBar(*_player1, {70, 15});
 
     if (_2Players) {
         _window.draw(_player2->getPlayerSprite());
         _window.draw(_hpPlayer2Text);
-        drawHPBar(*_player2, sf::Vector2f(70, 30));
+        drawHPBar(*_player2, {70, 30});
     }
 
-    _window.draw(_enemy->getSprite());
+    for (auto& e : _enemy) {
+        _window.draw(e->getSprite());
+    }
 
-    // 2. Nếu đang pause thì vẽ menu
-    if (_isPaused) {
+    if (_gameState == GameState::Paused) 
         drawPauseMenu();
-    }
-
-    // 3. Nếu Game Over thì vẽ Game Over
-    if (_isLose) {
+    if (_gameState == GameState::Lost) 
         drawGameOver();
+
+    if (isWinGame()) {
+        _gameState = GameState::Paused;
     }
 
     _window.display();
 }
 
+bool App::isWinGame() const {
+    // Kiểm tra nếu tất cả kẻ địch đều đã chết
+    for (const auto& e : _enemy) {
+        if (e->isAlive()) 
+            return false;
+    }
+    return true;
+}
+
 void App::playerCollisionWithEnemy() {
-    if (_player1->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
-        if (_player1->getDY() > 0) {
-            _enemy->setDX(0);
-            _player1->setDY(-0.2f);
-            _enemy->takeDamage(100.f);
-        } else {
-            if (!_player1->getIsHit()) {
-                _player1->setIsHit(true, _enemy->getDamage());
-                _player1->getHitClock().restart();
+    for (auto& e : _enemy) {
+        if (!e->isAlive()) 
+            continue;
+
+        // Kiểm tra va chạm với player1
+        if (_player1->getRect().intersects(e->getRect())) {
+            if (_player1->getDY() > 0) {
+                e->setDX(0);
+                _player1->setDY(-0.2f);
+                e->takeDamage(100.f);
+            } else {
+                if (!_player1->getIsHit()) {
+                    _player1->setIsHit(true, e->getDamage());
+                    _player1->getHitClock().restart();
+                }
             }
         }
-    }
 
-    if (!_2Players) return; // Không kiểm tra va chạm nếu chỉ có 1 người chơi
-
-    if (_player2->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
-        if (_player2->getDY() > 0) {
-            _enemy->setDX(0);
-            _player2->setDY(-0.2f);
-            _enemy->takeDamage(100.f);
-        } else {
-            if (!_player2->getIsHit()) {
-                _player2->setIsHit(true, _enemy->getDamage());
-                _player2->getHitClock().restart();
+        // Kiểm tra va chạm với player2 nếu có
+        if (_2Players && _player2->getRect().intersects(e->getRect())) {
+            if (_player2->getDY() > 0) {
+                e->setDX(0);
+                _player2->setDY(-0.2f);
+                e->takeDamage(100.f);
+            } else {
+                if (!_player2->getIsHit()) {
+                    _player2->setIsHit(true, e->getDamage());
+                    _player2->getHitClock().restart();
+                }
             }
         }
     }
@@ -351,9 +348,11 @@ void App::bulletCollisionWithEnemy() {
     for (auto& b : _player1->getBullets()) {
         if (!b->isActive()) continue;
 
-        if (b->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
-            b->setActive(false);        // Ẩn viên đạn
-            _enemy->takeDamage(b->getDamage());
+        for (auto& e : _enemy) {
+            if (b->getRect().intersects(e->getRect()) && e->isAlive()) {
+                b->setActive(false);        // Ẩn viên đạn
+                e->takeDamage(b->getDamage());
+            }
         }
     }
 
@@ -362,9 +361,11 @@ void App::bulletCollisionWithEnemy() {
     for (auto& b : _player2->getBullets()) {
         if (!b->isActive()) continue;
 
-        if (b->getRect().intersects(_enemy->getRect()) && _enemy->isAlive()) {
-            b->setActive(false);        // Ẩn viên đạn
-            _enemy->takeDamage(b->getDamage());
+        for (auto& e : _enemy) {
+            if (b->getRect().intersects(e->getRect()) && e->isAlive()) {
+                b->setActive(false);        // Ẩn viên đạn
+                e->takeDamage(b->getDamage());
+            }
         }
     }
 }
@@ -440,7 +441,7 @@ void App::run() {
     auto& level = _map.getMap(0);
 
     while (_window.isOpen()) {
-        if (!_isPlaying) {
+        if (_gameState == GameState::MenuMain) {
             _music.stop();
 
             sf::Event event;
@@ -455,12 +456,12 @@ void App::run() {
 
                     if (_1PlayerButton.getGlobalBounds().contains(mousePos)) {
                         _2Players = false; // Mặc định là chơi 1 người
-                        _isPlaying = true;
+                        _gameState = GameState::Playing;
                     }
 
                     if (_2PlayersButton.getGlobalBounds().contains(mousePos)) {
                         _2Players = true; // Chơi 2 người
-                        _isPlaying = true;
+                        _gameState = GameState::Playing;
                     }
 
                     if (_optionsButton.getGlobalBounds().contains(mousePos)) {
@@ -478,14 +479,14 @@ void App::run() {
             _window.display();
         }
         
-        if (_isPlaying) {
+        if (_gameState == GameState::Playing) {
             runGame(level);
-            if (_isRestart)
-                _isRestart = false;
+            if (_gameState == GameState::Restarting) {
+                _gameState = GameState::Playing;
+            }
 
-            if (_isExit) {
-                _isPlaying = false;
-                _isExit = false;
+            if (_gameState == GameState::Exiting) {
+                _gameState = GameState::MenuMain;
             }
         }
     }
@@ -495,9 +496,26 @@ void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
     _player1 = new Contra();
-    if (_2Players)
+    _player1Keys[PlayerAction::Left]  = sf::Keyboard::A;
+    _player1Keys[PlayerAction::Right] = sf::Keyboard::D;
+    _player1Keys[PlayerAction::Down]  = sf::Keyboard::S;
+    _player1Keys[PlayerAction::Up]    = sf::Keyboard::W;
+    _player1Keys[PlayerAction::Fire]  = sf::Keyboard::J;
+    _player1Keys[PlayerAction::Jump]  = sf::Keyboard::K;
+
+    if (_2Players) {
         _player2 = new Lugci();
-    _enemy = new SlimeEnemy();
+        _player2Keys[PlayerAction::Left]  = sf::Keyboard::Left;
+        _player2Keys[PlayerAction::Right] = sf::Keyboard::Right;
+        _player2Keys[PlayerAction::Down]  = sf::Keyboard::Down;
+        _player2Keys[PlayerAction::Up]    = sf::Keyboard::Up;
+        _player2Keys[PlayerAction::Fire]  = sf::Keyboard::Num2;
+        _player2Keys[PlayerAction::Jump]  = sf::Keyboard::Num1;
+    }
+    _enemy.push_back(new SlimeEnemy());
+    _enemy.push_back(new SlimeEnemy());
+
+    
     offsetX = 0;
     offsetY = 0;
 
@@ -509,8 +527,8 @@ void App::initGame() {
         std::cerr << "Failed to load background\n";
     }
 
-    if (!_tileSet.loadFromFile("Tiles/Assets/Assets.png"))
-        std::cerr << "Error loading Tiles.png\n";
+    if (!ResourceLoader::loadTexture(_tileSet, "Tiles/Assets/Assets.png"))
+        exit(1);
 
     if (!_lava.loadFromFile("Tiles/Assets/Lava.png"))
         std::cerr << "Error loading Lava.png\n";
@@ -519,10 +537,13 @@ void App::initGame() {
     if (_2Players)
         _player2->setPlayer(120, 120);
 
-    _enemy->setEnemy(800, 150);
+    // for (auto e : _enemy)
+    //     e->setEnemy(800, 150);
+    _enemy[0]->setEnemy(800, 150);
+    _enemy[1]->setEnemy(700, 150);
 
-    if (!_music.openFromFile("Sound/Mario_Theme.ogg"))
-        std::cerr << "Missing Mario_Theme.ogg\n";
+    if (!ResourceLoader::loadSound(_music, "Sound/Mario_Theme.ogg"))
+        exit(1);
 
     _hpPlayer1Text.setFont(_font);
     _hpPlayer1Text.setString("Player 1");
@@ -538,9 +559,6 @@ void App::initGame() {
 
     _music.setLoop(true);
     _music.play();
-
-    _isWin = false;
-    _isLose = false;
 }
 
 void App::clearObjects() {
@@ -550,23 +568,24 @@ void App::clearObjects() {
     if (_player2)
         delete _player2;
 
-    if (_enemy)
-        delete _enemy;
+    for (auto e : _enemy) {
+        delete e;
+    }
+    _enemy.clear();
         
     _player1 = nullptr;
     _player2 = nullptr;
-    _enemy = nullptr;
 }
 
 void App::runGame(const std::vector<std::string>& level) {
     initGame();
-    while (_isPlaying && _window.isOpen()) {
+    while (_window.isOpen()) {
         float time = _clock.restart().asMicroseconds() / 500.f;
         if (time > 20) 
             time = 20;
 
         handleEvents();
-        if (_isRestart || _isExit)
+        if (_gameState == GameState::Restarting || _gameState == GameState::Exiting)
            return;
         update(time, level);
         render();

@@ -53,7 +53,7 @@ bool Enemy::isAlive() const { return life; }
 
 float Enemy::getDX() const { return dx; }
 
-float Enemy::getDamage() const { return _damge; }
+float Enemy::getDamage() const { return _damage; }
 
 // Setters
 void Enemy::setDX(float value) { dx = value; }
@@ -67,7 +67,7 @@ void Enemy::takeDamage(float damage) {
     }
 }
 SlimeEnemy::SlimeEnemy() {
-    _damge = 30.f;
+    _damage = GetEnemyDamage(EnemyType::Slime);
 }
 
 void SlimeEnemy::setEnemy(int x, int y) {

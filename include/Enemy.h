@@ -7,6 +7,19 @@
 #include "Map.h"
 #include "Player.h"
 
+enum class EnemyType {
+    Slime,  
+};
+
+inline float GetEnemyDamage(EnemyType type) {
+    switch (type) {
+        case EnemyType::Slime:
+            return 25.f; // Sát thương của Slime
+        default:
+            return 0.f;
+    }
+}
+
 class Enemy {
 protected:
     float dx, dy;
@@ -19,7 +32,7 @@ protected:
     const int FRAME_WIDTH = 16;
     const int FRAME_HEIGHT = 16;
 
-    float _damge;
+    float _damage;
 public:
     Enemy();
     virtual ~Enemy();

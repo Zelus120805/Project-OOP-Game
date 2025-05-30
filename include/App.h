@@ -9,6 +9,18 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Map.h"
+#include "Error.h"
+
+enum class GameState {
+    MenuMain,
+    Playing,
+    Options,
+    Paused,
+    Won,
+    Lost,
+    Restarting,
+    Exiting,
+};
 
 class App {
 private:
@@ -19,8 +31,10 @@ private:
 
     Map _map;
     Player* _player1;
+    std::map<PlayerAction, sf::Keyboard::Key> _player1Keys;
     Player* _player2;
-    Enemy* _enemy;
+    std::map<PlayerAction, sf::Keyboard::Key> _player2Keys;
+    std::vector<Enemy*> _enemy;
 
     sf::Music _music;
     sf::Clock _clock;
@@ -48,17 +62,11 @@ private:
     // Game
     sf::Font _font;
     sf::Font _fontTime;
-    bool _isPlaying;
-    bool _isPaused = false;
-    bool _isRestart;
-    bool _isExit;
 
     // 2 Players mode
     bool _2Players;
-
-    // Win / Lose
-    bool _isWin;
-    bool _isLose;
+    // Game state
+    GameState _gameState = GameState::Playing;
 
     void preparePauseButton();
     void prepareGameOver();
@@ -67,15 +75,21 @@ private:
     void handleEvents();
     void update(float time, const std::vector<std::string>& currentMap);
     void render();
+    bool isWinGame() const;
 private:
     void playerCollisionWithEnemy();
     void bulletCollisionWithEnemy();
     void drawHPBar(const Player& player, sf::Vector2f position);
     void drawPauseMenu();
     void drawGameOver();
+    void drawUIGame();
 public:
     App();
     virtual ~App();
+
+    sf::Vector2f calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2);
+    void updateCameraOffset(const sf::FloatRect& rect);
+    void renderBullets(Player* player);
 
     void run();
     void clearObjects();

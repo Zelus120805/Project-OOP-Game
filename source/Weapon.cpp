@@ -32,30 +32,30 @@ void Weapon::setActive(bool value) { _active = value; }
 // class Gun
 Gun::Gun() {
     _active = false;
-    _damage = 10.f;
+    _damage = GetDamageSpeed(TypeWeapon::Gun);
     _shootCooldown.restart();
 }
 
-void Gun::Shoot(float x, float y, BulletDirection dir) {
+void Gun::Shoot(float x, float y, WeaponDirection dir) {
     _rect = sf::FloatRect(x, y, 4, 4);
     _direction = dir;
     _active = true;
 
     switch (_direction) {
-        case BulletDirection::Right:
-            _speed = 0.15f;
+        case WeaponDirection::Right:
+            _speed = GetSpeedWeapon(TypeWeapon::Gun);
             break;
-        case BulletDirection::Left:
-            _speed = -0.15f;
+        case WeaponDirection::Left:
+            _speed = -GetSpeedWeapon(TypeWeapon::Gun);
             break;
-        case BulletDirection::Up:
+        case WeaponDirection::Up:
             _speed = 0.f; // Xoay theo Y, không dùng _speed này
             break;
     }
 }
 
 void Gun::update(float time, const std::vector<std::string>& currentMap) {
-    if (_direction == BulletDirection::Up) {
+    if (_direction == WeaponDirection::Up) {
         _rect.top -= 0.2f * time; // bay lên
     } else {
         _rect.left += _speed * time; // bay ngang
@@ -72,22 +72,22 @@ void Gun::update(float time, const std::vector<std::string>& currentMap) {
 }
 
 void Gun::attack(Player& player) {
-    if (_shootCooldown.getElapsedTime().asMilliseconds() >= 500) {
+    if (_shootCooldown.getElapsedTime().asMilliseconds() >= GetCoolDownWeapon(TypeWeapon::Gun)) {
         auto bullet = std::make_unique<Gun>();
 
-        if (player.checkUp()) {
-            bullet->Shoot(player.getRect().left + player.getRect().width / 2 - 3, player.getRect().top, BulletDirection::Up);
-        } else if (player.checkRight()) {
-            if (!player.checkDown()) {
-                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 10, BulletDirection::Right);
+        if (player.getPose() == PlayerPose::Up) {
+            bullet->Shoot(player.getRect().left + player.getRect().width / 2 - 3, player.getRect().top, WeaponDirection::Up);
+        } else if (player.getDirection() == Direction::Right) {
+            if (player.getPose() != PlayerPose::Down) {
+                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 10, WeaponDirection::Right);
             } else {
-                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Right);
+                bullet->Shoot(player.getRect().left + player.getRect().width / 2 + 8, player.getRect().top + player.getRect().height / 2 - 6, WeaponDirection::Right);
             }
         } else {
-            if (!player.checkDown()) {
-                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 10, BulletDirection::Left);
+            if (player.getPose() != PlayerPose::Down) {
+                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 10, WeaponDirection::Left);
             } else {
-                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 6, BulletDirection::Left);
+                bullet->Shoot(player.getRect().left - 1, player.getRect().top + player.getRect().height / 2 - 6, WeaponDirection::Left);
             }
         }
 

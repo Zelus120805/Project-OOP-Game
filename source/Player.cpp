@@ -15,19 +15,18 @@ void Player::takeDamage() {
         if (!_isDamagedTaken) {
             _isDamagedTaken = true;
             _hp = (_hp - _damageEnemy < 0) ? 0 : _hp - _damageEnemy;
+
             if (_hp <= 0) {
                 _isDying = true;
 
-                if (_checkDown)
+                if (_pose == PlayerPose::Down)
                     rect.top -= 18;
-                else if (_checkUp)
+                else if (_pose == PlayerPose::Up)
                     rect.top += 10;
 
                 _playerSet.setColor(sf::Color::Red);
                 return;
             }
-                
-            // std::cout << "Player HP: " << _hp << std::endl;
         }
 
         if (hitClock.getElapsedTime().asMilliseconds() > 200) {
@@ -73,44 +72,38 @@ void Player::setIsHit(bool value, const float& damage) {
     isHit = value;
     _damageEnemy = damage;
 }
+Direction Player::getDirection() const { return _dir; }
+PlayerPose Player::getPose() const { return _pose; }
 
 // --- Control / Update ---
-void Player::controlPlayer(sf::Keyboard::Key left, sf::Keyboard::Key right, sf::Keyboard::Key up, sf::Keyboard::Key down, sf::Keyboard::Key jump, sf::Keyboard::Key shoot) {
+void Player::controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) {
     if (_isDeadCompletely) return;
 
-    if (sf::Keyboard::isKeyPressed(left)) {
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Left))) {
         dx = -0.05;
-        _checkLeft = true;
-        _checkRight = false;
-        _checkUp = false;
-        _checkDown = false;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Left;
     }
-    if (sf::Keyboard::isKeyPressed(right)) {
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Right))) {
         dx = 0.05;
-        _checkLeft = false;
-        _checkRight = true;
-        _checkUp = false;
-        _checkDown = false;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Right;
     }
-    if (sf::Keyboard::isKeyPressed(up) && onGround) {
-        _checkUp = true;
-        _checkDown = false;
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Up)) && onGround) {
+        _pose = PlayerPose::Up;
     }
-    if (sf::Keyboard::isKeyPressed(down) && onGround) {
-        _checkUp = false;
-        _checkDown = true;
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Down)) && onGround) {
+        _pose = PlayerPose::Down;
     }
-    if (sf::Keyboard::isKeyPressed(jump)) {
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Jump))) {
+        _pose = PlayerPose::Stand;
         if (onGround) {
             dy = -0.3;
             onGround = false;
             sound.play();
         }
-
-        _checkUp = false;
-        _checkDown = false;
     }
-    if (sf::Keyboard::isKeyPressed(shoot)) {
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Fire))) {
         //std::cout << "Shooting...\n";
 
         attack(_skills["Gun"].get());
@@ -158,7 +151,8 @@ void Player::addBullet(std::unique_ptr<Weapon> bullet) {
 
 // Atack with weapon
 void Player::updateWeapons(float time, const std::vector<std::string>& tileMap) {\
-    if (_isDeadCompletely) return;
+    if (_isDeadCompletely) 
+        return;
     
     for (auto& weapon : _weapons)
         weapon->update(time, tileMap);
@@ -215,10 +209,9 @@ void Contra::setPlayer(float x, float y) {
     rect = sf::FloatRect(x, y, 24, 35);
     dx = dy = 0;
     currentFrame = 0;
-    _checkLeft = false;
-    _checkRight = true;
-    _checkUp = false;
-    _checkDown = false;
+
+    _dir = Direction::Right;
+    _pose = PlayerPose::Stand;
 
     _playerSet.setTextureRect(sf::IntRect(25 * 8 - 2, 8 - 4, 24, 36));
     _bulletSet.setTextureRect(sf::IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6));
@@ -266,18 +259,18 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
         currentFrame = 0;
 
     if (dx > 0) {
-        setSpriteByPose("run_right", currentFrame);
+        setSpriteByPose(PlayerPose::RunRight, currentFrame);
     } else if (dx < 0) {
-        setSpriteByPose("run_left", currentFrame);
+        setSpriteByPose(PlayerPose::RunLeft, currentFrame);
     } else {
-        if (!_checkDown && !_checkUp) {
-            if (_checkLeft)
-                setSpriteByPose("left", currentFrame);
+        if (_pose != PlayerPose::Down && _pose != PlayerPose::Up) {
+            if (_dir == Direction::Left)
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
             else
-                setSpriteByPose("right", currentFrame);
-        } else if (_checkUp) {
-            setSpriteByPose("up", currentFrame);
-        }  else if (_checkDown) {
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
+        } else if (_pose == PlayerPose::Up) {
+            setSpriteByPose(PlayerPose::Up, currentFrame);
+        } else if (_pose == PlayerPose::Down) {
             // Tính kích thước nằm
             int targetWidth = 34; // width khi nằm
             int diff = targetWidth - 24; // chênh lệch so với khi đứng
@@ -286,7 +279,7 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
             int i2 = (rect.top + rect.height - 1) / 16;
             bool touchingWall = false;
 
-            if (_checkRight) {
+            if (_dir == Direction::Right) { // đang quay phải
                 int j = (rect.left + rect.width + diff - 1) / 16;
                 for (int i = i1; i <= i2; i++) {
                     if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
@@ -296,7 +289,7 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
                 }
 
                 if (touchingWall) {
-                    rect.left -= diff; // đẩy ra xa đủ để nằm không bị cấn
+                    rect.left -= diff;
                 }
             } else { // đang quay trái
                 int j = (rect.left - diff) / 16;
@@ -308,69 +301,77 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
                 }
 
                 if (touchingWall) {
-                    rect.left += diff; // đẩy ra phải
+                    rect.left += diff;
                 }
             }
 
-            setSpriteByPose("down", currentFrame); // cuối cùng mới pose sau khi đẩy
+            setSpriteByPose(PlayerPose::Down, currentFrame);
         }
     }
 
     dx = 0;
-
     takeDamage();
 }
 
-void Contra::setSpriteByPose(const std::string& pose, float currentFrame) {
+void Contra::setSpriteByPose(PlayerPose pose, float currentFrame) {
     // Kích thước sprite mặc định
     int spriteX = 0, spriteY = 0, width = 24, height = 32;
 
-    if (pose == "run_right") {
-        spriteX = 20 * 8 - 40 * int(currentFrame);
-        spriteY = 8 - 4;
-        width = 24;
-        height = 32 + 4;
-    } else if (pose == "run_left") {
-        spriteX = 20 * 8 - 40 * int(currentFrame) + 24;
-        spriteY = 8 - 4;
-        width = -24;
-        height = 32 + 4;
-    } else if (pose == "right") {
-        spriteX = 25 * 8 - 2;
-        spriteY = 8 - 4;
-        width = 24;
-        height = 32 + 4;
-    } else if (pose == "left") {
-        spriteX = 25 * 8 + 24 - 2;
-        spriteY = 8 - 4;
-        width = -24;
-        height = 32 + 4;
-    } else if (pose == "up") {
-        if (_checkRight) {
-            spriteX = 40 * 8 + 4;
-            spriteY = 0;
-            width = 18;
-            height = 46;
-        }
-        else {
-            spriteX = 40 * 8 + 4 + 18;
-            spriteY = 0;
-            width = -18;
-            height = 46;
-        }
-    } else if (pose == "down") {
-        if (_checkRight) {
-            spriteX = 34 * 8;
-            spriteY = 2 * 8 - 2;
-            width = 34;
-            height = 17;
-        }
-        else {
-            spriteX = 34 * 8 + 34;
-            spriteY = 2 * 8 - 2;
-            width = -34;
-            height = 17;
-        }
+    switch (pose) {
+        case PlayerPose::RunRight:
+            spriteX = 20 * 8 - 40 * int(currentFrame);
+            spriteY = 8 - 4;
+            width = 24;
+            height = 32 + 4;
+            break;
+        case PlayerPose::RunLeft:
+            spriteX = 20 * 8 - 40 * int(currentFrame) + 24;
+            spriteY = 8 - 4;
+            width = -24;
+            height = 32 + 4;
+            break;
+        case PlayerPose::Stand:
+            if (_dir == Direction::Right) {
+                spriteX = 25 * 8 - 2;
+                spriteY = 8 - 4;
+                width = 24;
+                height = 32 + 4;
+            }
+            else {
+                spriteX = 25 * 8 + 24 - 2;
+                spriteY = 8 - 4;
+                width = -24;
+                height = 32 + 4;
+            }
+            break;
+        case PlayerPose::Up:
+            if (_dir == Direction::Right) {
+                spriteX = 40 * 8 + 4;
+                spriteY = 0;
+                width = 18;
+                height = 46;
+            }
+            else {
+                spriteX = 40 * 8 + 4 + 18;
+                spriteY = 0;
+                width = -18;
+                height = 46;
+            }
+            break;
+        case PlayerPose::Down:
+            if (_dir == Direction::Right) {
+                spriteX = 34 * 8;
+                spriteY = 2 * 8 - 2;
+                width = 34;
+                height = 17;
+            }
+            else {
+                spriteX = 34 * 8 + 34;
+                spriteY = 2 * 8 - 2;
+                width = -34;
+                height = 17;
+            }
+            break;
     }
 
     // Set sprite texture rect
@@ -430,10 +431,9 @@ void Lugci::setPlayer(float x, float y) {
     rect = sf::FloatRect(x, y, 24, 35);
     dx = dy = 0;
     currentFrame = 0;
-    _checkLeft = false;
-    _checkRight = true;
-    _checkUp = false;
-    _checkDown = false;
+
+    _dir = Direction::Right;
+    _pose = PlayerPose::Stand;
 
     _playerSet.setTextureRect(sf::IntRect(18 * 8 + 1, 20, 24, 36));
     _bulletSet.setTextureRect(sf::IntRect(51 * 8 - 2, 8 * 2 + 4, 6, 6));
@@ -481,18 +481,18 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
         currentFrame = 0;
 
     if (dx > 0) {
-        setSpriteByPose("run_right", currentFrame);
+        setSpriteByPose(PlayerPose::RunRight, currentFrame);
     } else if (dx < 0) {
-        setSpriteByPose("run_left", currentFrame);
+        setSpriteByPose(PlayerPose::RunLeft, currentFrame);
     } else {
-        if (!_checkDown && !_checkUp) {
-            if (_checkLeft)
-                setSpriteByPose("left", currentFrame);
+        if (_pose != PlayerPose::Down && _pose != PlayerPose::Up) {
+            if (_dir == Direction::Left)
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
             else
-                setSpriteByPose("right", currentFrame);
-        } else if (_checkUp) {
-            setSpriteByPose("up", currentFrame);
-        }  else if (_checkDown) {
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
+        } else if (_pose == PlayerPose::Up) {
+            setSpriteByPose(PlayerPose::Up, currentFrame);
+        } else if (_pose == PlayerPose::Down) {
             // Tính kích thước nằm
             int targetWidth = 34; // width khi nằm
             int diff = targetWidth - 24; // chênh lệch so với khi đứng
@@ -501,7 +501,7 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
             int i2 = (rect.top + rect.height - 1) / 16;
             bool touchingWall = false;
 
-            if (_checkRight) {
+            if (_dir == Direction::Right) { // đang quay phải
                 int j = (rect.left + rect.width + diff - 1) / 16;
                 for (int i = i1; i <= i2; i++) {
                     if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
@@ -511,7 +511,7 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
                 }
 
                 if (touchingWall) {
-                    rect.left -= diff; // đẩy ra xa đủ để nằm không bị cấn
+                    rect.left -= diff;
                 }
             } else { // đang quay trái
                 int j = (rect.left - diff) / 16;
@@ -523,69 +523,77 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
                 }
 
                 if (touchingWall) {
-                    rect.left += diff; // đẩy ra phải
+                    rect.left += diff;
                 }
             }
 
-            setSpriteByPose("down", currentFrame); // cuối cùng mới pose sau khi đẩy
+            setSpriteByPose(PlayerPose::Down, currentFrame);
         }
     }
 
     dx = 0;
-
     takeDamage();
 }
 
-void Lugci::setSpriteByPose(const std::string& pose, float currentFrame) {
+void Lugci::setSpriteByPose(PlayerPose pose, float currentFrame) {
     // Kích thước sprite mặc định
     int spriteX = 0, spriteY = 0, width = 24, height = 32;
 
-    if (pose == "run_right") {
-        spriteX = 18 * 8 - 1 + 24 * int(currentFrame);
-        spriteY = 17 * 8 - 4;
-        width = 24;
-        height = 32 + 4;
-    } else if (pose == "run_left") {
-        spriteX = 18 * 8 - 1 + 24 * int(currentFrame) + 24;
-        spriteY = 17 * 8 - 4;
-        width = -24;
-        height = 32 + 4;
-    } else if (pose == "right") {
-        spriteX = 18 * 8 + 1;
-        spriteY = 17;
-        width = 24;
-        height = 32 + 4;
-    } else if (pose == "left") {
-        spriteX = 18 * 8 + 1 + 24;
-        spriteY = 17;
-        width = -24;
-        height = 32 + 4;
-    } else if (pose == "up") {
-        if (_checkRight) {
-            spriteX = 25 * 8 + 3;
-            spriteY = 7;
-            width = 18;
-            height = 46;
-        }
-        else {
-            spriteX = 25 * 8 + 3 + 18;
-            spriteY = 7;
-            width = -18;
-            height = 46;
-        }
-    } else if (pose == "down") {
-        if (_checkRight) {
-            spriteX = 18 * 8;
-            spriteY = 22 * 8 - 1;
-            width = 34;
-            height = 17;
-        }
-        else {
-            spriteX = 18 * 8 + 34;
-            spriteY = 22 * 8 - 1;
-            width = -34;
-            height = 17;
-        }
+    switch (pose) {
+        case PlayerPose::RunRight:
+            spriteX = 18 * 8 - 1 + 24 * int(currentFrame);
+            spriteY = 17 * 8 - 4;
+            width = 24;
+            height = 32 + 4;
+            break;
+        case PlayerPose::RunLeft:
+            spriteX = 18 * 8 - 1 + 24 * int(currentFrame) + 24;
+            spriteY = 17 * 8 - 4;
+            width = -24;
+            height = 32 + 4;
+            break;
+        case PlayerPose::Stand:
+            if (_dir == Direction::Right) {
+                spriteX = 18 * 8 + 1;
+                spriteY = 17;
+                width = 24;
+                height = 32 + 4;
+            }
+            else {
+                spriteX = 18 * 8 + 1 + 24;
+                spriteY = 17;
+                width = -24;
+                height = 32 + 4;
+            }
+            break;
+        case PlayerPose::Up:
+            if (_dir == Direction::Right) {
+                spriteX = 25 * 8 + 3;
+                spriteY = 7;
+                width = 18;
+                height = 46;
+            }
+            else {
+                spriteX = 25 * 8 + 3 + 18;
+                spriteY = 7;
+                width = -18;
+                height = 46;
+            }
+            break;
+        case PlayerPose::Down:
+            if (_dir == Direction::Right) {
+                spriteX = 18 * 8;
+                spriteY = 22 * 8 - 1;
+                width = 34;
+                height = 17;
+            }
+            else {
+                spriteX = 18 * 8 + 34;
+                spriteY = 22 * 8 - 1;
+                width = -34;
+                height = 17;
+            }
+            break;
     }
 
     // Set sprite texture rect
