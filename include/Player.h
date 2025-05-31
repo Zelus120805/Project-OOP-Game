@@ -8,6 +8,8 @@
 #include <map>
 #include "Map.h"
 #include "Weapon.h"
+#include "Error.h"
+#include "InputConfig.h"
 
 enum class PlayerType {
     Contra,
@@ -25,15 +27,6 @@ enum class PlayerPose {
 enum class Direction {
     Left,
     Right,
-};
-
-enum class PlayerAction {
-    Left,
-    Right,
-    Up,
-    Down,
-    Jump,
-    Fire
 };
 
 class Weapon;

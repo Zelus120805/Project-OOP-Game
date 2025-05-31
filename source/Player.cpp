@@ -4,9 +4,15 @@
 
 // --- Hàm private ---
 void Player::initSound() {
-    if (!buffer.loadFromFile("Sound/Jump.ogg")) {
-        std::cerr << "Missing Jump.ogg\n";
+    try {
+        if (!buffer.loadFromFile("Sound/Jump.ogg")) {
+            throw MyException(111, "Không thể tải âm thanh Jump.ogg");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
+    
     sound.setBuffer(buffer);
 }
 
@@ -199,8 +205,13 @@ Contra::Contra() {
 Contra::~Contra() { }
 
 void Contra::setPlayer(float x, float y) {
-    if (!_text.loadFromFile("Player/Contra.png")) {
-        std::cerr << "Error loading Contra.png\n";
+    try {
+        if (!_text.loadFromFile("Player/Contra.png")) {
+            throw MyException(111, "Không thể tải hình ảnh Contra.png");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
     _playerSet.setTexture(_text);
@@ -417,12 +428,22 @@ Lugci::Lugci() {
 Lugci::~Lugci() { }
 
 void Lugci::setPlayer(float x, float y) {
-    if (!_text.loadFromFile("Player/Lugci.png")) {
-        std::cerr << "Error loading Lugci.png\n";
+    try {
+        if (!_text.loadFromFile("Player/Lugci.png")) {
+            throw MyException(111, "Không thể tải hình ảnh Lugci.png");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
-    if (!_textBullet.loadFromFile("Player/Contra.png")) {
-        std::cerr << "Error loading Contra.png\n";
+    try {
+        if (!_textBullet.loadFromFile("Player/Contra.png")) {
+            throw MyException(111, "Không thể tải hình ảnh Contra.png cho đạn");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
     _playerSet.setTexture(_text);

@@ -30,10 +30,15 @@ const std::vector<std::string>& Map::getMap(int level) const {
 }
 
 bool Map::loadBackground(const std::string& path) {
-    if (!_backgroundTexture.loadFromFile(path)) {
-        std::cerr << "Failed to load background: " << path << std::endl;
-        return false;
+    try {
+        if (!_backgroundTexture.loadFromFile(path)) {
+            throw MyException(111, "Không thể tải background texture từ " + path);
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
+
     _backgroundSprite.setTexture(_backgroundTexture);
     _backgroundSprite.setPosition(0, 0); // Vẽ từ góc trên bên trái
     return true;
@@ -41,8 +46,13 @@ bool Map::loadBackground(const std::string& path) {
 
 void Map::loadMapFromFile(const std::string& filePath) {
     std::ifstream file(filePath);
-    if (!file.is_open()) {
-        throw std::runtime_error("Unable to open map file: " + filePath);
+    try {
+        if (!file.is_open()) {
+            throw MyException(111, "Không thể mở file " + filePath);
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
     std::vector<std::string> map;
@@ -79,7 +89,7 @@ void Map::render(sf::RenderWindow& window, const sf::Texture& tileSet) {
         for (int j = 0; j < _width; j++) {
             char tileChar = currentMap[i][j];
             if (tileChar == ' ' || tileChar == '0') continue;
-            
+
             if (tileChar == '1') tile.setTextureRect(sf::IntRect(33, 32, 16, 16));          // nền đất 1
             else if (tileChar == '2') tile.setTextureRect(sf::IntRect(49, 32, 16, 16));     // nền đất 2
             else if (tileChar == '3') tile.setTextureRect(sf::IntRect(18, 16, 16, 16));     // nền đất cỏ 1

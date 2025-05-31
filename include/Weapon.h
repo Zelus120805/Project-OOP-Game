@@ -21,7 +21,7 @@ enum class TypeWeapon {
 inline float GetSpeedWeapon(TypeWeapon type) {
     switch (type) {
         case TypeWeapon::Gun:
-            return 0.18f;
+            return 0.2f;
         default:
             return 0.f;
     }
@@ -30,7 +30,7 @@ inline float GetSpeedWeapon(TypeWeapon type) {
 inline float GetDamageSpeed(TypeWeapon type) {
     switch (type) {
         case TypeWeapon::Gun:
-            return 10.f;
+            return 60.f;
         default:
             return 0.f;
     }

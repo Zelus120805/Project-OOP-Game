@@ -6,6 +6,7 @@
 #include <cmath>
 #include "Map.h"
 #include "Player.h"
+#include "Error.h"
 
 enum class EnemyType {
     Slime,  
@@ -32,12 +33,20 @@ protected:
     const int FRAME_WIDTH = 16;
     const int FRAME_HEIGHT = 16;
 
+    // Vi tri
+    int _xPos;
+    int _yPos; // Vị trí ban đầu của Enemy
+
+    // Các biến death
+    bool _isDying = false; // SlimeEnemy đang trong trạng thái dying
+    bool _isDeadCompletely = false; // SlimeEnemy đã chết hoàn toàn
+
     float _damage;
 public:
     Enemy();
     virtual ~Enemy();
 public:
-    virtual void setEnemy(int x, int y) = 0;
+    virtual void setEnemy() = 0;
     virtual void updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) = 0;
     virtual void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
 public:
@@ -47,12 +56,15 @@ public:
     bool isAlive() const;
     float getDX() const;
     float getDamage() const;
+    int getXPos() const;
+    int getYPos() const;
 public:
     // Setters
     void setDX(float value);
     virtual void takeDamage(float damage);
     virtual void attack(float playerX) = 0;
     virtual void die() = 0;
+    virtual bool isCompleteDie() const = 0;
 };
 
 class SlimeEnemy : public Enemy {
@@ -75,18 +87,16 @@ private:
     float _attackElapsed;
     float _detectionRange = 35.f;  // Phát hiện trong 35px
 
-    // Các biến death
-    bool _isDying = false; // SlimeEnemy đang trong trạng thái dying
     float _deathFrame = 0.f;
     float _deathFrameSpeed = 2.f;
     float _deathDuration = 1.f; // tổng thời gian chết
     float _deathElapsed = 0.f;
 public:
     bool isAttacking() const;
-    bool isDying() const;
+    bool isCompleteDie() const override;
 public:
-    SlimeEnemy();
-    void setEnemy(int x, int y) override;
+    SlimeEnemy(int x, int y);
+    void setEnemy() override;
     void updateEnemy(float time, const std::vector<std::string>& tileMap, Player& player) override;
     void attack(float playerX) override;
     void die() override;

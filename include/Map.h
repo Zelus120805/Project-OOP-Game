@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
+#include "Error.h"
 
 extern float offsetX;
 extern float offsetY;

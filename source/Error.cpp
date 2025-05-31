@@ -1,32 +1,29 @@
 #include "Error.h"
 
-void ErrorMessage::show(const std::string& msg) {
-    std::cout << "Error: " << msg << std::endl;
+std::string MyException::BuildMessage(const int& code, const std::string& des) {
+    std::ostringstream oss;
+    oss << "Error code: " << code << " - Description: " << des;
+    return oss.str();
 }
 
-bool ResourceLoader::loadFont(sf::Font& font, const std::string& filepath) {
-    if (!font.loadFromFile(filepath)) {
-        std::cout << "Error loading font from: " << filepath << std::endl;
-        return false;
-    }
+MyException::MyException(const int& code, const std::string& des) : _codeErr(code), _messageDes(des), _fullMessage(BuildMessage(code, des)) { }
 
-    return true;
+const char* MyException::what() const noexcept {
+    return _fullMessage.c_str();
 }
 
-bool ResourceLoader::loadTexture(sf::Texture& texture, const std::string& filepath) {
-    if (!texture.loadFromFile(filepath)) {
-        std::cout << "Error loading texture from: " << filepath << std::endl;
-        return false;
-    }
-    
-    return true;
+const std::string& MyException::GetErrorDescription() {
+    return _messageDes;
 }
 
-bool ResourceLoader::loadSound(sf::Music& music, const std::string& filepath) {
-    if (!music.openFromFile(filepath)) {
-        std::cout << "Error loading sound from: " << filepath << std::endl;
-        return false;
-    }
-
-    return true;
+const int& MyException::GetErrorCode() {
+    return _codeErr;
 }
+
+NullReferenceException::NullReferenceException(const int& code, const std::string& des) : MyException(code, des) { }
+
+IndexOutOfRangeException::IndexOutOfRangeException(const int& code, const std::string& des) : MyException(code, des) { }
+
+FileNotFoundException::FileNotFoundException(const int& code, const std::string& des) : MyException(code, des) { }
+
+InvalidDataException::InvalidDataException(const int& code, const std::string& des) : MyException(code, des) { }

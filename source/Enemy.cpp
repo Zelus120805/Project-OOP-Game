@@ -16,6 +16,9 @@ Enemy::~Enemy() { }
 void Enemy::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
         for (int j = rect.left / 16; j < (rect.left + rect.width) / 16; j++) {
+            if (tileMap[i][j] == 'z')
+                takeDamage(100.f); // Giả sử 'z' là một tile
+
             if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
                 if (checkVertical) {
                     if (dy > 0) {
@@ -55,6 +58,10 @@ float Enemy::getDX() const { return dx; }
 
 float Enemy::getDamage() const { return _damage; }
 
+int Enemy::getXPos() const { return _xPos; }
+
+int Enemy::getYPos() const { return _yPos; }
+
 // Setters
 void Enemy::setDX(float value) { dx = value; }
 
@@ -66,13 +73,22 @@ void Enemy::takeDamage(float damage) {
         dx = 0;
     }
 }
-SlimeEnemy::SlimeEnemy() {
+
+SlimeEnemy::SlimeEnemy(int x, int y) {
     _damage = GetEnemyDamage(EnemyType::Slime);
+    _xPos = x;
+    _yPos = y;
+    setEnemy();
 }
 
-void SlimeEnemy::setEnemy(int x, int y) {
-    if (!_enemyTexture.loadFromFile("Enemy/slime.png")) {
-        std::cerr << "Error loading slime.png\n";
+void SlimeEnemy::setEnemy() {
+    try {
+        if (!_enemyTexture.loadFromFile("Enemy/slime.png")) {
+            throw MyException(111, "Không thể tải slime texture");
+        }
+    } catch (const MyException& e) {
+        std::cout << e.what() << '\n';
+        exit(1);
     }
 
     // Tạo các frame cho animation
@@ -93,7 +109,7 @@ void SlimeEnemy::setEnemy(int x, int y) {
     _enemySprite.setTextureRect(_idleFrames[0]);  // Bắt đầu với frame idle đầu tiên
     _enemySprite.scale(1.5f, 1.5f);
     _enemySprite.setOrigin(8.f, 0.f);   // default không lật
-    rect = sf::FloatRect(x, y, 16, 16);
+    rect = sf::FloatRect(_xPos, _yPos, 16, 16);
     _enemySpeed = 0.01f;
     dx = dy = _enemySpeed;
     _isMovingRight = true;
@@ -109,8 +125,10 @@ void SlimeEnemy::updateEnemy(float time, const std::vector<std::string>& tileMap
         _deathElapsed += time / 1000.f;
         _deathFrame += _deathFrameSpeed * time / 1000.f;
 
-        if (_deathFrame >= _deathFrames.size())
+        if (_deathFrame >= _deathFrames.size()) {
+            _isDeadCompletely = true; // Đã chết hoàn toàn
             _deathFrame = _deathFrames.size() - 1;
+        }
 
         _enemySprite.setTextureRect(_deathFrames[static_cast<int>(_deathFrame)]);
         _enemySprite.setPosition(rect.left - offsetX, rect.top - offsetY);
@@ -208,7 +226,7 @@ void SlimeEnemy::attack(float playerX) {
 
 bool SlimeEnemy::isAttacking() const { return _isAttacking; }
 
-bool SlimeEnemy::isDying() const { return _isDying; }
+bool SlimeEnemy::isCompleteDie() const { return _isDeadCompletely; }
 
 void SlimeEnemy::takeDamage(float damage) {
     _hp -= damage;
