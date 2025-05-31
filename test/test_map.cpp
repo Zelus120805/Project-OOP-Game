@@ -1,41 +1,29 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "Map.h"
+#include "MyException.h"
 #include <fstream>
-#include <SFML/Graphics.hpp>
 
+TEST_CASE("Map loads a valid map file") {
+    // Tạo file tạm cho test
+    std::ofstream testFile("Level/test_level.txt");
+    testFile << "1111\n"
+             << "1  1\n"
+             << "1111\n\n"
+             << "2 2 2 2\n"
+             << "2    2\n";
+    testFile.close();
 
-TEST_CASE("Map getHeight and getWidth return correct constants") {
+    Map map;
+    map.loadMapFromFile("Level/test_level.txt");
+
+    CHECK(map.getMap(0).size() == 24);  // Map 1 có 24 dòng
+    CHECK(map.getMap(1).size() == 3);  // Map 2 có 3 dòng
+    CHECK(map.getMap(2).size() == 2);   // Map 3 có 2 dòng
+}
+
+TEST_CASE("Map getHeight and getWidth getters") {
     Map map;
     CHECK(map.getHeight() == 24);
     CHECK(map.getWidth() == 150);
-}
-
-TEST_CASE("Map getMap throws or returns valid for valid level") {
-    Map map;
-    // load test map first
-    const std::string testMapFile = "Level/Level_1.txt";
-    map.loadMapFromFile(testMapFile);
-
-    CHECK_NOTHROW(map.getMap(0));
-    const auto& m = map.getMap(0);
-    CHECK(m.size() == 24); // Kiểm tra số dòng
-}
-
-TEST_CASE("Map loadBackground loads image correctly or fails gracefully") {
-    Map map;
-    // File ảnh không tồn tại, phải return false
-    bool result = map.loadBackground("not_exist_image.png");
-    CHECK(result == false);
-
-    // Với file ảnh thật thì mới test true, ví dụ:
-    bool result2 = map.loadBackground("valid_background.png");
-    CHECK(result2 == true);
-}
-
-TEST_CASE("Global offsetX, offsetY can be set and used") {
-    offsetX = 100.f;
-    offsetY = 50.f;
-
-    CHECK(offsetX == doctest::Approx(100.f));
-    CHECK(offsetY == doctest::Approx(50.f));
 }

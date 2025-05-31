@@ -116,12 +116,6 @@ public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(PlayerPose pose, float currentFrame) override;
-public:
-    // void testisAttacked() {
-    //     if (isHit) {
-    //         takeDamage();
-    //     }
-    // }
 };
 
 class Lugci : public Player {
@@ -135,12 +129,6 @@ public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(PlayerPose pose, float currentFrame) override;
-public:
-    // void testisAttacked() {
-    //     if (isHit) {
-    //         takeDamage();
-    //     }
-    // }
 };
 
 #endif // _PLAYER_H_
