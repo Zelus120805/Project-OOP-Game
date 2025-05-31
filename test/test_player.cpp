@@ -1,75 +1,56 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "Player.h"
-#include <vector>
-#include <string>
 
-// Mock map đơn giản, toàn ' ' (không cản)
-std::vector<std::string> emptyMap = {
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        ",
-    "                                        "
+class TestPlayer : public Player {
+public:
+    void setPlayer(float x, float y) override {
+        rect = sf::FloatRect(x, y, 24, 35);
+        _hp = 100.f;
+        _hpPlayer = 100.f;
+        _isDamagedTaken = false;
+        isHit = false;
+        _damageEnemy = 0.f;
+    }
+    void update(float, const std::vector<std::string>&, sf::RenderWindow&) override {}
+    void setSpriteByPose(PlayerPose, float) override {}
 };
 
-TEST_CASE("Player Contra init và di chuyển basic") {
-    Contra player;
-    player.setPlayer(50.f, 50.f);
+TEST_CASE("Player getter/setter basics") {
+    TestPlayer p;
+    p.setPlayer(10, 20);
 
-    // Check khởi tạo HP
-    CHECK(player.getHP() == doctest::Approx(100.f));
+    CHECK(p.getRect().left == 10);
+    CHECK(p.getRect().top == 20);
+    CHECK(p.getHP() == 100.f);
+    CHECK(p.getHPPlayer() == 100.f);
 
-    // Ban đầu chưa đi, dx = 0
-    CHECK(player.getDY() == 0);
+    p.setDY(5.5f);
+    CHECK(p.getDY() == doctest::Approx(5.5f));
 
-    // Giả lập bấm phím phải (right)
-    player.controlPlayer(sf::Keyboard::Right, sf::Keyboard::Right, sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Space, sf::Keyboard::F);
-    // Nhưng do isKeyPressed chỉ check thật, ta test kiểu update để giả lập:
-    player.setDY(0);
-    player.update(10.f, emptyMap, *(new sf::RenderWindow()));
-
-    // Tạm thời chưa di chuyển thật vì isKeyPressed không giả lập được
-    // Nhưng check vẫn giữ HP đầy đủ
-    CHECK(player.getHP() == doctest::Approx(100.f));
+    p.setIsHit(true, 25.f);
+    CHECK(p.getIsHit() == true);
 }
 
-TEST_CASE("Player Contra bị trúng đạn giảm HP") {
-    Contra player;
-    player.setPlayer(50.f, 50.f);
+TEST_CASE("Player takeDamage works correctly") {
+    TestPlayer p;
+    p.setPlayer(0, 0);
 
-    // Ban đầu full HP
-    CHECK(player.getHP() == doctest::Approx(100.f));
+    // Giả sử enemy gây 30 damage
+    p.setIsHit(true, 30.f);
 
-    // Set trạng thái bị trúng đạn
-    player.setIsHit(true);
+    // Gọi hàm takeDamage sẽ trừ HP
+    p.takeDamage();
 
-    // Gọi isAttacked() để xử lý trừ máu
-    player.testisAttacked();
+    // Sau 1 lần damage, _hp phải giảm 30
+    CHECK(p.getHP() == doctest::Approx(70.f));
 
-    // HP giảm 10
-    CHECK(player.getHP() == doctest::Approx(90.f));
+    // Gọi lại takeDamage trước khi reset thì HP không giảm nữa
+    p.takeDamage();
+    CHECK(p.getHP() == doctest::Approx(70.f));
 
-    // Giữ trạng thái isHit false sau 6 lần nhấp nháy (giả lập flashCount)
-    player.setFlashCount(6);
-    player.testisAttacked();
+    p.setIsHit(true, 80.f);
 
-    CHECK(player.getIsHit() == false);
+    p.takeDamage();
+    CHECK(p.getHP() == doctest::Approx(0.f));
 }
-
-// TEST_CASE("Player Contra bắn đạn tạo bullet active") {
-//     Contra player;
-//     player.setPlayer(50.f, 50.f);
-
-//     player.attack();
-
-//     auto& bullets = player.getBullets();
-//     CHECK(bullets.size() > 0);
-
-//     // Đạn phải đang active
-//     CHECK(bullets.back().isActive());
-// }

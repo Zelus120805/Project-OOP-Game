@@ -8,7 +8,7 @@ all:
 # Unit test với doctest
 test:
 	g++ -o test_exec \
-		test/test_weapon.cpp test/test_player.cpp test/test_map.cpp \
+		test/test_player.cpp test/test_weapon.cpp test/test_enemy.cpp test/test_map.cpp \
 		source/Player.cpp source/Weapon.cpp source/Enemy.cpp source/Map.cpp \
 	    -Iinclude -Itest -Itest/doctest-master/doctest -I/mingw64/include \
 	    -L/mingw64/lib \

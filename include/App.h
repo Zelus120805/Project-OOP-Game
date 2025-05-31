@@ -26,7 +26,6 @@ class App {
 private:
     sf::RenderWindow _window;
     sf::Texture _tileSet;
-    sf::Texture _lava;
     sf::Texture _enemyTileSet;
 
     Map _map;

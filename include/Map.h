@@ -25,7 +25,7 @@ public:
     bool loadBackground(const std::string& path);
 
     void loadMapFromFile(const std::string& filePath);
-    void render(sf::RenderWindow& window, const sf::Texture& tileSet, const sf::Texture& LavaTexture);
+    void render(sf::RenderWindow& window, const sf::Texture& tileSet);
 };
 
 #endif // _MAP_H_

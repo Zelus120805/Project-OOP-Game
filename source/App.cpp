@@ -266,7 +266,7 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
 
 void App::render() {
     _window.clear(sf::Color(107, 198, 255));
-    _map.render(_window, _tileSet, _lava);
+    _map.render(_window, _tileSet);
 
     renderBullets(_player1);
     if (_2Players) 
@@ -529,9 +529,6 @@ void App::initGame() {
 
     if (!ResourceLoader::loadTexture(_tileSet, "Tiles/Assets/Assets.png"))
         exit(1);
-
-    if (!_lava.loadFromFile("Tiles/Assets/Lava.png"))
-        std::cerr << "Error loading Lava.png\n";
 
     _player1->setPlayer(90, 120);
     if (_2Players)
