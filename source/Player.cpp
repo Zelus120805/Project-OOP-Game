@@ -81,39 +81,6 @@ void Player::setIsHit(bool value, const float& damage) {
 Direction Player::getDirection() const { return _dir; }
 PlayerPose Player::getPose() const { return _pose; }
 
-// --- Control / Update ---
-void Player::controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) {
-    if (_isDeadCompletely) return;
-
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Left))) {
-        dx = -0.05;
-        _pose = PlayerPose::Stand;
-        _dir = Direction::Left;
-    }
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Right))) {
-        dx = 0.05;
-        _pose = PlayerPose::Stand;
-        _dir = Direction::Right;
-    }
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Up)) && onGround) {
-        _pose = PlayerPose::Up;
-    }
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Down)) && onGround) {
-        _pose = PlayerPose::Down;
-    }
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Jump))) {
-        _pose = PlayerPose::Stand;
-        if (onGround) {
-            dy = -0.3;
-            onGround = false;
-            sound.play();
-        }
-    }
-    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Fire))) {
-        attack(_skills["Gun"].get());
-    }
-}
-
 // --- Collision ---
 void Player::Collision(bool checkVertical, const std::vector<std::string>& tileMap) {
     for (int i = rect.top / 16; i < (rect.top + rect.height) / 16; i++) {
@@ -419,6 +386,38 @@ void Contra::setSpriteByPose(PlayerPose pose, float currentFrame) {
     rect.top = bottom - rect.height; // Giữ đáy không đổi
 }
 
+void Contra::controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) {
+    if (_isDeadCompletely) return;
+
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Left))) {
+        dx = -0.05;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Left;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Right))) {
+        dx = 0.05;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Right;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Up)) && onGround) {
+        _pose = PlayerPose::Up;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Down)) && onGround) {
+        _pose = PlayerPose::Down;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Jump))) {
+        _pose = PlayerPose::Stand;
+        if (onGround) {
+            dy = -0.3;
+            onGround = false;
+            sound.play();
+        }
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Fire))) {
+        attack(_skills["Gun"].get());
+    }
+}
+
 // Player Lugci
 Lugci::Lugci() {
     _weapon = new Gun();
@@ -533,7 +532,30 @@ void Lugci::update(float time, const std::vector<std::string>& tileMap, sf::Rend
             else
                 setSpriteByPose(PlayerPose::Stand, currentFrame);
         } else if (_pose == PlayerPose::Up) {
-            setSpriteByPose(PlayerPose::Up, currentFrame);
+            // Tính kích thước khi hướng lên
+            int targetHeight = 34; // Chiều cao khi hướng lên
+            int diff = targetHeight - rect.height; // Phần nhô lên trên
+
+            int j1 = rect.left / 16;
+            int j2 = (rect.left + rect.width - 1) / 16;
+            int i = (rect.top - diff) / 16;  // dòng phía trên đầu
+
+            bool blockedAbove = false;
+
+            for (int j = j1; j <= j2; j++) {
+                if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
+                    blockedAbove = true;
+                    break;
+                }
+            }
+
+            if (!blockedAbove) {
+                setSpriteByPose(PlayerPose::Up, currentFrame);
+            } else {
+                // không đủ không gian để hướng lên => giữ nguyên pose
+                _pose = PlayerPose::Stand;
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
+            }
         } else if (_pose == PlayerPose::Down) {
             // Tính kích thước nằm
             int targetWidth = 34; // width khi nằm
@@ -651,3 +673,34 @@ void Lugci::setSpriteByPose(PlayerPose pose, float currentFrame) {
     rect.top = bottom - rect.height; // Giữ đáy không đổi
 }
 
+void Lugci::controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) {
+    if (_isDeadCompletely) return;
+
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Left))) {
+        dx = -0.05;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Left;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Right))) {
+        dx = 0.05;
+        _pose = PlayerPose::Stand;
+        _dir = Direction::Right;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Up)) && onGround) {
+        _pose = PlayerPose::Up;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Down)) && onGround) {
+        _pose = PlayerPose::Down;
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Jump))) {
+        _pose = PlayerPose::Stand;
+        if (onGround) {
+            dy = -0.3;
+            onGround = false;
+            sound.play();
+        }
+    }
+    if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Fire))) {
+        attack(_skills["Gun"].get());
+    }
+}

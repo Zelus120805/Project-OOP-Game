@@ -78,7 +78,7 @@ public:
     virtual void setPlayer(float x, float y) = 0;
     virtual void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) = 0;
     virtual void setSpriteByPose(PlayerPose pose, float currentFrame) = 0;
-    void takeDamage();
+    virtual void controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) = 0;
 public:
     sf::FloatRect getRect() const;
     sf::Sprite& getPlayerSprite();
@@ -98,7 +98,7 @@ public:
     Weapon& getBullet() { return *_weapon; }
     std::vector<std::unique_ptr<Weapon>>& getBullets() { return _weapons; }
 public:
-    void controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap);
+    void takeDamage();
     void Collision(bool checkVertical, const std::vector<std::string>& tileMap);
     void addBullet(std::unique_ptr<Weapon> bullet);
     void attack(Weapon* weapon);
@@ -116,6 +116,7 @@ public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(PlayerPose pose, float currentFrame) override;
+    void controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) override;
 };
 
 class Lugci : public Player {
@@ -129,6 +130,7 @@ public:
     void setPlayer(float x, float y) override;
     void update(float time, const std::vector<std::string>& tileMap, sf::RenderWindow& window) override;
     void setSpriteByPose(PlayerPose pose, float currentFrame) override;
+    void controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyMap) override;
 };
 
 #endif // _PLAYER_H_
