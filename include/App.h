@@ -13,6 +13,7 @@
 #include "Error.h"
 #include "Random.h"
 #include "InputConfig.h"
+#include "PlayerFactory.h"
 
 enum class GameState {
     MenuMain,
@@ -37,6 +38,7 @@ private:
     std::map<PlayerAction, sf::Keyboard::Key> _player1Keys;
     Player* _player2;
     std::map<PlayerAction, sf::Keyboard::Key> _player2Keys;
+    PlayerFactoryManager _factoryManager;
     std::vector<Enemy*> _enemy;
 
     sf::Music _music;
@@ -93,9 +95,6 @@ private:
     void drawGameWon();
     void drawUIGame();
     void menuOptions();
-public:
-    App();
-    virtual ~App();
 
     sf::Vector2f calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2);
     void updateCameraOffset(const sf::FloatRect& rect);
@@ -103,10 +102,26 @@ public:
     void spoilPlayer();
     void spoilEnemy();
 
-    void run();
     void clearObjects();
     void initGame();
     void runGame(const std::vector<std::string>& level);
+
+    // Update game
+    void updateCamera(); 
+    void updatePlayers(float time, const std::vector<std::string>& currentMap);
+    void updateEnemies(float time, const std::vector<std::string>& currentMap);
+    void updateCollisions();
+
+    // Render game
+    void renderEnemies();
+    void renderBulletsPlayer();
+    void renderPlayerAndHp();
+public:
+    App();
+    virtual ~App();
+
+public:
+    void run();
 };
 
 #endif // _APP_H_

@@ -193,6 +193,8 @@ void App::init() {
     prepareGameOver();
     prepareGameWon();
     InputConfig::initialize();
+    _factoryManager.registerFactory(PlayerType::Contra, std::make_unique<ContraFactory>());
+    _factoryManager.registerFactory(PlayerType::Lugci, std::make_unique<LugciFactory>());
 }
 
 sf::Vector2f App::calculateMidpoint(const sf::FloatRect& r1, const sf::FloatRect& r2) {
@@ -309,10 +311,7 @@ void App::handleEvents() {
     }
 }
 
-void App::update(float time, const std::vector<std::string>& currentMap) {
-    if (_gameState == GameState::Paused || _gameState == GameState::Lost || _gameState == GameState::Won)
-        return;
-
+void App::updateCamera() {
     if (_2Players) {
         if (!_player1->finishPlayer() && !_player2->finishPlayer()) {
             auto center = calculateMidpoint(_player1->getRect(), _player2->getRect());
@@ -334,10 +333,9 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
             _gameState = GameState::Lost;
         }
     }
+}
 
-    playerCollisionWithEnemy();
-    bulletCollisionWithEnemy();
-
+void App::updatePlayers(float time, const std::vector<std::string>& currentMap) {
     _player1->controlPlayer(_player1Keys);
     _player1->update(time, currentMap, _window);
     _player1->updateWeapons(time, currentMap);
@@ -347,7 +345,9 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
         _player2->update(time, currentMap, _window);
         _player2->updateWeapons(time, currentMap);
     }
+}
 
+void App::updateEnemies(float time, const std::vector<std::string>& currentMap) {
     for (auto e : _enemy) {
         e->updateEnemy(time, currentMap, *_player1);
         if (_2Players) 
@@ -355,16 +355,34 @@ void App::update(float time, const std::vector<std::string>& currentMap) {
     }
 }
 
-void App::render() {
-    _window.clear(sf::Color(107, 140, 255));
-    _map.render(_window, _tileSet);
+void App::updateCollisions(){
+    playerCollisionWithEnemy();
+    bulletCollisionWithEnemy();
+}
 
+void App::update(float time, const std::vector<std::string>& currentMap) {
+    if (_gameState == GameState::Paused || _gameState == GameState::Lost || _gameState == GameState::Won)
+        return;
+
+    updateCamera();
+    updateCollisions();
+    updatePlayers(time, currentMap);
+    updateEnemies(time, currentMap);
+}
+
+void App::renderEnemies() {
+    for (const auto& e : _enemy) {
+        _window.draw(e->getSprite());
+    }
+}
+
+void App::renderBulletsPlayer() {
     renderBullets(_player1);
     if (_2Players) 
         renderBullets(_player2);
+}
 
-    drawUIGame();
-
+void App::renderPlayerAndHp() {
     _window.draw(_player1->getPlayerSprite());
     _window.draw(_hpPlayer1Text);
     drawHPBar(*_player1, {70, 15});
@@ -374,10 +392,17 @@ void App::render() {
         _window.draw(_hpPlayer2Text);
         drawHPBar(*_player2, {70, 30});
     }
+}
 
-    for (auto& e : _enemy) {
-        _window.draw(e->getSprite());
-    }
+void App::render() {
+    _window.clear(sf::Color(107, 140, 255));
+
+    _map.render(_window, _tileSet);
+
+    renderBulletsPlayer();
+    drawUIGame();
+    renderPlayerAndHp();
+    renderEnemies();
 
     if (_gameState == GameState::Paused) 
         drawPauseMenu();
@@ -605,33 +630,10 @@ void App::run() {
 void App::initGame() {
     // Xoá các đối tượng cũ nếu có
     clearObjects();
-    // _player1Keys[PlayerAction::Left]  = sf::Keyboard::A;
-    // _player1Keys[PlayerAction::Right] = sf::Keyboard::D;
-    // _player1Keys[PlayerAction::Down]  = sf::Keyboard::S;
-    // _player1Keys[PlayerAction::Up]    = sf::Keyboard::W;
-    // _player1Keys[PlayerAction::Fire]  = sf::Keyboard::J;
-    // _player1Keys[PlayerAction::Jump]  = sf::Keyboard::K;
 
-    // _player2Keys[PlayerAction::Left]  = sf::Keyboard::Left;
-    // _player2Keys[PlayerAction::Right] = sf::Keyboard::Right;
-    // _player2Keys[PlayerAction::Down]  = sf::Keyboard::Down;
-    // _player2Keys[PlayerAction::Up]    = sf::Keyboard::Up;
-    // _player2Keys[PlayerAction::Fire]  = sf::Keyboard::Num2;
-    // _player2Keys[PlayerAction::Jump]  = sf::Keyboard::Num1;
-
-    // try {
-    //     if (!InputConfig::loadControls("Player/Controls.txt", _player1Keys, _player2Keys)) {
-    //         throw MyException(123, "Không thể mở file Controls.txt để tải cấu hình điều khiển");
-    //     }
-    // } catch (const MyException& e) {
-    //     std::cout << e.what() << '\n';
-    //     exit(1);
-    // }
-
-    _player1 = new Contra();
-    if (_2Players) {
-        _player2 = new Lugci();
-    }
+    _player1 = _factoryManager.createPlayer(PlayerType::Contra);
+    if (_2Players)
+        _player2 = _factoryManager.createPlayer(PlayerType::Lugci);
     
     offsetX = 0;
     offsetY = 0;
@@ -701,9 +703,9 @@ void App::spoilEnemy() {
         _enemy.clear();
 
         // Tạo ngẫu nhiên số lượng kẻ địch
-        int countEnemy = Random::getRandomInt(15, 25);
+        int countEnemy = Random::getRandomInt(10, 20);
         for (int i = 0; i < countEnemy; ++i) {
-            _enemy.push_back(new SlimeEnemy(Random::getRandomInt(200, 2200), 150));
+            _enemy.push_back(new SlimeEnemy(Random::getRandomInt(300, 2200), 150));
         }
     }
     else if (_gameState == GameState::Restarting) {
@@ -744,7 +746,7 @@ void App::runGame(const std::vector<std::string>& level) {
 
 void App::menuOptions() {
     const std::vector<std::string> actionNames = {
-        "Left", "Right", "Down", "Up", "Shoot", "Jump"
+        "Left", "Right", "Up", "Down", "Shoot", "Jump"
     };
 
     struct ControlItem {

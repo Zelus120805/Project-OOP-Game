@@ -65,8 +65,8 @@ bool InputConfig::loadControls(const std::string& filename, std::map<PlayerActio
         std::map<PlayerAction, sf::Keyboard::Key> temp = {
             {PlayerAction::Left,  stringToKey(keys[0])},
             {PlayerAction::Right, stringToKey(keys[1])},
-            {PlayerAction::Down,  stringToKey(keys[2])},
-            {PlayerAction::Up,    stringToKey(keys[3])},
+            {PlayerAction::Up,  stringToKey(keys[2])},
+            {PlayerAction::Down,    stringToKey(keys[3])},
             {PlayerAction::Fire,  stringToKey(keys[4])},
             {PlayerAction::Jump,  stringToKey(keys[5])}
         };
