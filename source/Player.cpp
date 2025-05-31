@@ -110,8 +110,6 @@ void Player::controlPlayer(const std::map<PlayerAction, sf::Keyboard::Key>& keyM
         }
     }
     if (sf::Keyboard::isKeyPressed(keyMap.at(PlayerAction::Fire))) {
-        //std::cout << "Shooting...\n";
-
         attack(_skills["Gun"].get());
     }
 }
@@ -280,7 +278,30 @@ void Contra::update(float time, const std::vector<std::string>& tileMap, sf::Ren
             else
                 setSpriteByPose(PlayerPose::Stand, currentFrame);
         } else if (_pose == PlayerPose::Up) {
-            setSpriteByPose(PlayerPose::Up, currentFrame);
+            // Tính kích thước khi hướng lên
+            int targetHeight = 34; // Chiều cao khi hướng lên
+            int diff = targetHeight - rect.height; // Phần nhô lên trên
+
+            int j1 = rect.left / 16;
+            int j2 = (rect.left + rect.width - 1) / 16;
+            int i = (rect.top - diff) / 16;  // dòng phía trên đầu
+
+            bool blockedAbove = false;
+
+            for (int j = j1; j <= j2; j++) {
+                if (tileMap[i][j] >= '0' && tileMap[i][j] <= '9') {
+                    blockedAbove = true;
+                    break;
+                }
+            }
+
+            if (!blockedAbove) {
+                setSpriteByPose(PlayerPose::Up, currentFrame);
+            } else {
+                // không đủ không gian để hướng lên => giữ nguyên pose
+                _pose = PlayerPose::Stand;
+                setSpriteByPose(PlayerPose::Stand, currentFrame);
+            }
         } else if (_pose == PlayerPose::Down) {
             // Tính kích thước nằm
             int targetWidth = 34; // width khi nằm
