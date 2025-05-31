@@ -89,32 +89,31 @@ void Map::render(sf::RenderWindow& window, const sf::Texture& tileSet) {
         for (int j = 0; j < _width; j++) {
             char tileChar = currentMap[i][j];
             if (tileChar == ' ' || tileChar == '0') continue;
+
+            if (tileChar == '1') tile.setTextureRect(sf::IntRect(33, 32, 16, 16));          // nền đất 1
+            else if (tileChar == '2') tile.setTextureRect(sf::IntRect(49, 32, 16, 16));     // nền đất 2
+            else if (tileChar == '3') tile.setTextureRect(sf::IntRect(18, 16, 16, 16));     // nền đất cỏ 1
+            else if (tileChar == '4') tile.setTextureRect(sf::IntRect(49, 0, 16, 16));      // nền đất cỏ 2
+            else if (tileChar == '5') tile.setTextureRect(sf::IntRect(96, 272, 48, 11));    // thanh gỗ bên trái
+            else if (tileChar == '6') tile.setTextureRect(sf::IntRect(176, 272, 48, 11));   // thanh gỗ bên phải
+            else if (tileChar == '7') tile.setTextureRect(sf::IntRect(144, 272, 32, 32));   // cột gỗ 
+            else if (tileChar == '8') tile.setTextureRect(sf::IntRect(96, 48, 16, 16));     // block nhỏ
+            else if (tileChar == '9') tile.setTextureRect(sf::IntRect(112, 32, 32, 32));    // block lớn
+
+            else if (tileChar == 'a') tile.setTextureRect(sf::IntRect(272, 48, 16, 16));    // nấm tím
+            else if (tileChar == 'b') tile.setTextureRect(sf::IntRect(209, 32, 16, 16));    // cỏ hình cầu
+            else if (tileChar == 'c') tile.setTextureRect(sf::IntRect(225, 32, 29, 16));    // cỏ hình dẹt
+            else if (tileChar == 'd') tile.setTextureRect(sf::IntRect(84, 64, 56, 16));     // hàng rào
+            else if (tileChar == 'e') tile.setTextureRect(sf::IntRect(144, 32, 32, 16));    // nước
+            else if (tileChar == 'f') tile.setTextureRect(sf::IntRect(120, 112, 32, 32));   // nền gỗ
+
+            else if (tileChar == 'z') tile.setTextureRect(sf::IntRect(338, 85, 16, 16));   // độc
             
-            else {
-                if (tileChar == '1') tile.setTextureRect(sf::IntRect(33, 32, 16, 16));          // nền đất 1
-                else if (tileChar == '2') tile.setTextureRect(sf::IntRect(49, 32, 16, 16));     // nền đất 2
-                else if (tileChar == '3') tile.setTextureRect(sf::IntRect(18, 16, 16, 16));     // nền đất cỏ 1
-                else if (tileChar == '4') tile.setTextureRect(sf::IntRect(49, 0, 16, 16));      // nền đất cỏ 2
-                else if (tileChar == '5') tile.setTextureRect(sf::IntRect(96, 272, 48, 11));    // thanh gỗ bên trái
-                else if (tileChar == '6') tile.setTextureRect(sf::IntRect(176, 272, 48, 11));   // thanh gỗ bên phải
-                else if (tileChar == '7') tile.setTextureRect(sf::IntRect(144, 272, 32, 32));   // cột gỗ 
-                else if (tileChar == '8') tile.setTextureRect(sf::IntRect(96, 48, 16, 16));     // block nhỏ
-                else if (tileChar == '9') tile.setTextureRect(sf::IntRect(112, 32, 32, 32));    // block lớn
+            else continue;
 
-                else if (tileChar == 'a') tile.setTextureRect(sf::IntRect(272, 48, 16, 16));    // nấm tím
-                else if (tileChar == 'b') tile.setTextureRect(sf::IntRect(209, 32, 16, 16));    // cỏ hình cầu
-                else if (tileChar == 'c') tile.setTextureRect(sf::IntRect(225, 32, 29, 16));    // cỏ hình dẹt
-                else if (tileChar == 'd') tile.setTextureRect(sf::IntRect(84, 64, 56, 16));     // hàng rào
-                else if (tileChar == 'e') tile.setTextureRect(sf::IntRect(144, 32, 32, 16));    // nước
-                else if (tileChar == 'f') tile.setTextureRect(sf::IntRect(120, 112, 32, 32));   // nền gỗ
-
-                else if (tileChar == 'z') tile.setTextureRect(sf::IntRect(338, 85, 16, 16));
-                
-                else continue;
-
-                tile.setPosition(j * 16 - offsetX, i * 16 - offsetY);
-                window.draw(tile);
-            }
+            tile.setPosition(j * 16 - offsetX, i * 16 - offsetY);
+            window.draw(tile);
+            
         }
     }
 }

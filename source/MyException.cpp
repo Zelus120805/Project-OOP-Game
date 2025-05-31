@@ -1,12 +1,12 @@
-#include "Error.h"
+#include "MyException.h"
+
+MyException::MyException(const int& code, const std::string& des) : _codeErr(code), _messageDes(des), _fullMessage(BuildMessage(code, des)) { }
 
 std::string MyException::BuildMessage(const int& code, const std::string& des) {
     std::ostringstream oss;
     oss << "Error code: " << code << " - Description: " << des;
     return oss.str();
 }
-
-MyException::MyException(const int& code, const std::string& des) : _codeErr(code), _messageDes(des), _fullMessage(BuildMessage(code, des)) { }
 
 const char* MyException::what() const noexcept {
     return _fullMessage.c_str();

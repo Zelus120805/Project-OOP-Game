@@ -1,105 +1,76 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "Weapon.h"
-#include <vector>
-#include <string>
+#include "Player.h"
 
-// Giả sử offsetX, offsetY mặc định để test (nếu cần, dùng biến toàn cục)
-float testOffsetX = 0.f;
-float testOffsetY = 0.f;
+TEST_CASE("Weapon::Shoot & Gun behavior") {
+    Gun gun;
+    CHECK(gun.isActive() == false);
 
-// TEST_CASE("Weapon activation and deactivation") {
-//     Weapon w;
-//     CHECK_FALSE(w.isActive());
+    gun.Shoot(100.f, 50.f, WeaponDirection::Right);
+    CHECK(gun.isActive() == true);
+    CHECK(gun.getRect().left == doctest::Approx(100.f));
+    CHECK(gun.getRect().top == doctest::Approx(50.f));
 
-//     w.setActive(true);
-//     CHECK(w.isActive());
+    // Check direction & speed (right)
+    gun.Shoot(0.f, 0.f, WeaponDirection::Right);
+    CHECK(gun.isActive() == true);
 
-//     w.deactivate();
-//     CHECK_FALSE(w.isActive());
-// }
+    // Check direction & speed (left)
+    gun.Shoot(0.f, 0.f, WeaponDirection::Left);
+    CHECK(gun.isActive() == true);
 
-// TEST_CASE("Gun shoot and movement") {
-//     Gun gun;
-//     CHECK_FALSE(gun.isActive());
+    // Check direction & speed (up)
+    gun.Shoot(0.f, 0.f, WeaponDirection::Up);
+    CHECK(gun.isActive() == true);
+}
 
-//     // Tạo map dummy để truyền vào update
-//     std::vector<std::string> someMap(20, std::string(30, '1')); // map toàn '1'
+TEST_CASE("Weapon::deactivate and setActive") {
+    Gun gun;
+    gun.setActive(true);
+    CHECK(gun.isActive() == true);
+    gun.deactivate();
+    CHECK(gun.isActive() == false);
+}
 
-//     // Bắn đạn, vị trí ban đầu (50,50), hướng đi phải
-//     gun.Shoot(50.f, 50.f, true);
-//     CHECK(gun.isActive());
-//     CHECK(gun.getRect().left == doctest::Approx(50.f));
-//     CHECK(gun.getRect().top == doctest::Approx(50.f));
-//     CHECK(gun.getDamage() == doctest::Approx(10.f));
+TEST_CASE("Weapon::collision with map") {
+    Gun gun;
+    gun.Shoot(0.f, 0.f, WeaponDirection::Right);
+    std::vector<std::string> map(20, "0000000000000000000000");
+    map[0][0] = '1';  // tạo va chạm ngay vị trí đầu
 
-//     // Cập nhật vị trí sau 1000ms (1s)
-//     gun.update(1000.f, someMap);
-//     CHECK(gun.getRect().left > 50.f); // đạn phải đi về bên phải
+    gun.collision(map);
+    CHECK(gun.isActive() == false);
+}
 
-//     // Giả lập va chạm với map, tile map toàn '0' (đạn phải bị vô hiệu)
-//     std::vector<std::string> zeroMap(20, std::string(30, '0'));
-//     gun.Shoot(50.f, 50.f, true);
-//     gun.update(10.f, zeroMap);
-//     CHECK_FALSE(gun.isActive());
-// }
+TEST_CASE("Gun::update position and out of bounds") {
+    Gun gun;
+    gun.Shoot(10.f, 10.f, WeaponDirection::Right);
+    std::vector<std::string> map(100, std::string(100, ' '));
 
-// TEST_CASE("Weapon collision out of map bounds does not crash") {
-//     Weapon w;
-//     w.setActive(true);
+    gun.update(1000.f, map);  // move 1000ms
+    CHECK(gun.getRect().left > 10.f);  // di chuyển qua phải
 
-//     // Không được truy cập _rect trực tiếp vì protected, sửa dùng hàm setter giả định (nếu có)
-//     // Nếu không có setter, skip test chỉnh _rect trực tiếp hoặc kế thừa để test
-//     // Giả định ta có setRect()
-//     // w.setRect(sf::FloatRect(-10.f, -10.f, 6, 6));
+    // Đẩy đạn ra ngoài map
+    gun.Shoot(-100.f, -100.f, WeaponDirection::Right);
+    gun.update(100.f, map);
+    CHECK(gun.isActive() == false);
+}
 
-//     // Nếu không có setter, bỏ phần chỉnh trực tiếp _rect này đi
+TEST_CASE("Gun::attack cooldown and bullet spawn") {
+    Contra player;
+    Gun gun;
 
-//     std::vector<std::string> emptyMap; // map rỗng
-//     CHECK_NOTHROW(w.collision(emptyMap));
-// }
+    gun.attack(player);  // bắn được
+    int count1 = player.getBullets().size();
+    CHECK(count1 > 0);
 
-// TEST_CASE("Weapon deactivates when out of screen bounds") {
-//     Gun gun;
-//     gun.Shoot(50.f, 50.f, true);
+    gun.attack(player);  // không bắn được ngay
+    int count2 = player.getBullets().size();
+    CHECK(count2 == count1);  // không tăng thêm đạn
 
-//     // Giả sử màn hình rộng 400 + offsetX = 0
-
-//     // Thay vì trực tiếp set gun._rect.left, mày phải làm hàm công khai set vị trí hoặc khởi tạo lại đạn mới với vị trí out of bound
-//     // Ví dụ tạo đạn với vị trí ngoài màn hình rồi gọi update
-
-//     // Cách đơn giản, tạo đạn, rồi chỉnh vị trí qua hàm getRect() trả về reference const thì bó tay
-//     // Nếu không có setter hoặc không thể truy cập _rect trực tiếp, phải thêm setter trong Weapon.h:
-
-//     // Giả lập setter:
-//     // gun.setPosition(500.f, gun.getRect().top);
-
-//     // Còn không, bỏ test này hoặc thêm hàm setter trước đã
-
-//     // Sau đó gọi update với map rỗng:
-//     gun.update(0.f, std::vector<std::string>{});
-//     CHECK_FALSE(gun.isActive());
-
-//     // Tương tự cho vị trí ngoài màn hình trái
-//     gun.Shoot(50.f, 50.f, false);
-//     // gun.setPosition(-10.f, gun.getRect().top);
-//     gun.update(0.f, std::vector<std::string>{});
-//     CHECK_FALSE(gun.isActive());
-// }
-
-// TEST_CASE("getPosition returns correct coordinates") {
-//     Gun gun;
-//     gun.Shoot(100.f, 150.f, true);
-//     gun.update(0.f, std::vector<std::string>{});
-//     sf::Vector2f pos = gun.getPosition();
-//     CHECK(pos.x == doctest::Approx(gun.getRect().left));
-//     CHECK(pos.y == doctest::Approx(gun.getRect().top));
-// }
-
-// TEST_CASE("getSprite returns reference to sprite") {
-//     Gun gun;
-//     gun.Shoot(10.f, 20.f, true);
-//     const sf::Sprite& sprite = gun.getSprite();
-//     CHECK(sprite.getPosition().x == doctest::Approx(gun.getRect().left));
-//     CHECK(sprite.getPosition().y == doctest::Approx(gun.getRect().top));
-// }
+    // giả lập cooldown chờ 600ms
+    sf::sleep(sf::milliseconds(600));
+    gun.attack(player);  // bắn tiếp
+    int count3 = player.getBullets().size();
+    CHECK(count3 > count2);
+}

@@ -414,7 +414,6 @@ void App::render() {
         drawGameWon();
     else {
         if (isWinGame()) {
-            
             _gameState = GameState::Won;
         }
     }

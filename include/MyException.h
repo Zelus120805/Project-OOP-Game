@@ -1,5 +1,5 @@
-#ifndef _ERROR_H_
-#define _ERROR_H_
+#ifndef _MYEXCEPTION_H_
+#define _MYEXCEPTION_H_
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>

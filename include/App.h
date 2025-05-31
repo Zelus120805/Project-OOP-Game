@@ -10,7 +10,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Map.h"
-#include "Error.h"
+#include "MyException.h"
 #include "Random.h"
 #include "InputConfig.h"
 #include "PlayerFactory.h"

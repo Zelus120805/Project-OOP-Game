@@ -221,7 +221,6 @@ void SlimeEnemy::attack(float playerX) {
         }
 
         dy = 0.f;
-        // std::cout << "SlimeEnemy attack animation!\n";
     }
 }
 

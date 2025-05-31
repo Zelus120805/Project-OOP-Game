@@ -6,7 +6,7 @@
 #include <cmath>
 #include "Map.h"
 #include "Player.h"
-#include "Error.h"
+#include "MyException.h"
 
 enum class EnemyType {
     Slime,  
